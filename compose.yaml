@@ -1,0 +1,6 @@
+﻿services:
+  workouttracker:
+    image: workouttracker
+    build:
+      context: .
+      dockerfile: Dockerfile
