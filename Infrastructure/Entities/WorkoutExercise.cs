@@ -7,5 +7,5 @@ public class WorkoutExercise
     public Guid ExerciseId { get; set; }
     public Exercise Exercise { get; set; }
     public Workout Workout { get; set; }
-    public ICollection<Set> Sets { get; set; }
+    public ICollection<Set> Sets { get; set; } = [];
 }

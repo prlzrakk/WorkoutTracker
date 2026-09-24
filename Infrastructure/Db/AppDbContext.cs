@@ -6,6 +6,11 @@ namespace Infrastructure.Db;
 
 public class ProjectContext : DbContext
 {
+    public ProjectContext(DbContextOptions<ProjectContext> options)
+        : base(options)
+    {
+    }
+
     public DbSet<Exercise> Exercises { get; set; }
     public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
     public DbSet<Workout> Workouts { get; set; }
@@ -49,7 +54,7 @@ public class SetConfiguration : IEntityTypeConfiguration<Set>
     {
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Reps).IsRequired();
-        builder.Property(s => s.Weight).IsRequired();
+        builder.Property(s => s.Weight).HasPrecision(6, 2).IsRequired();
         builder.Property(s => s.SetNumber).IsRequired();
         builder.HasOne(s => s.WorkoutExercise).WithMany(we => we.Sets).HasForeignKey(s => s.WorkoutExerciseId);
     }
