@@ -1,6 +1,6 @@
-namespace WorkoutTracker.backend.DTOs.Exercise;
+namespace WorkoutTracker.Core.DTOs.Exercise;
 
-public class ExerciseDto
+public class UpdateExerciseDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; }

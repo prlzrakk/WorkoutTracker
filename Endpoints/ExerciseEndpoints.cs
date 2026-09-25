@@ -1,7 +1,7 @@
 using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
-using WorkoutTracker.backend.DTOs.Exercise;
+using WorkoutTracker.Core.DTOs.Exercise;
 
 namespace WorkoutTracker.Api.Endpoints;
 
@@ -13,11 +13,11 @@ public static class ExerciseEndpoints
         {
             var result = await context.Exercises
                 .Select(e => new ExerciseDto
-                {
-                    Id = e.Id,
-                    Name = e.Name,
-                    MuscleGroup = e.MuscleGroup,
-                })
+                (
+                    e.Id,
+                    e.Name,
+                    e.MuscleGroup
+                ))
                 .ToListAsync();
             return Results.Ok(result);
         });
@@ -28,11 +28,11 @@ public static class ExerciseEndpoints
             if (exercise == null)
                 return Results.NotFound();
             var result = new ExerciseDto
-            {
-                Id = exercise.Id,
-                Name = exercise.Name,
-                MuscleGroup = exercise.MuscleGroup,
-            };
+            (
+                exercise.Id,
+                exercise.Name,
+                exercise.MuscleGroup
+            );
             return Results.Ok(result);
         });
 
@@ -64,15 +64,15 @@ public static class ExerciseEndpoints
                 Name = addedExercise.Name,
                 MuscleGroup = addedExercise.MuscleGroup,
             };
-            context.Exercises.Add(exercise);
+            await context.Exercises.AddAsync(exercise);
             await context.SaveChangesAsync();
             var result = new ExerciseDto
-            {
-                Id = exercise.Id,
-                Name = exercise.Name,
-                MuscleGroup = exercise.MuscleGroup,
-            };
-            
+            (
+                exercise.Id,
+                exercise.Name,
+                exercise.MuscleGroup
+            );
+
             return Results.Created($"api/exercises/{exercise.Id}", result);
         });
 

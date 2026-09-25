@@ -1,4 +1,4 @@
-namespace WorkoutTracker.backend.DTOs.Exercise;
+namespace WorkoutTracker.Core.DTOs.Exercise;
 
 public class CreateExerciseDto
 {

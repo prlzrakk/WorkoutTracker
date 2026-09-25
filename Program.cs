@@ -21,6 +21,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapGroup("api/exercises").MapExerciseEndpoints();
+app.MapGroup("/api/workouts/{workoutId:guid}/exercises/{workoutExerciseId:guid}/sets").MapSets();
+app.MapGroup("/api/workouts").MapWorkouts();
+app.MapGroup("api/workouts/{workoutId:guid}/exercises").MapWorkoutExercise();
 
 app.Run();
 

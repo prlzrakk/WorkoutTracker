@@ -42,7 +42,6 @@ public class WorkoutConfiguration : IEntityTypeConfiguration<Workout>
     {
         builder.HasKey(w => w.Id);
         builder.Property(w => w.Date).IsRequired();
-        builder.Property(w => w.Duration).IsRequired();
         builder.Property(w => w.Note);
         builder.HasMany(w => w.WorkoutExercises).WithOne(we => we.Workout).HasForeignKey(we => we.WorkoutId);
     }
