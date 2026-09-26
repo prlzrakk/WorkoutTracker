@@ -1,71 +1,67 @@
 using Infrastructure.Db;
 using Infrastructure.Entities;
 using WorkoutTracker.Core.DTOs.Set;
+using WorkoutTracker.Services.Interfaces;
 
-namespace WorkoutTracker.Api.Endpoints;
+namespace WorkoutTracker.Endpoints;
 
 public static class SetEndpoints
 {
     public static RouteGroupBuilder MapSets(this RouteGroupBuilder group)
     {
-        group.MapGet("/{setId:guid}", async (ProjectContext context, Guid setId) =>
+        group.MapGet("/{setId:guid}", async (ISetService service, Guid setId, Guid workoutId, Guid workoutExerciseId) =>
         {
-            var set = await context.Sets.FindAsync(setId);
-            if (set == null)
-                return Results.NotFound();
-            var result = new SetDto(
-                set.Id,
-                set.Weight,
-                set.Reps,
-                set.SetNumber
-            );
-            return Results.Ok(result);
+            var set = await service.GetSetByIdAsync(workoutId, workoutExerciseId, setId);
+            return set == null ? Results.NotFound() : Results.Ok(set);
         });
 
         group.MapPost("/",
-            async (ProjectContext context, CreateSetDto newSet, Guid workoutId, Guid workoutExerciseId) =>
+            async (ISetService service, CreateSetDto newSet, Guid workoutId, Guid workoutExerciseId) =>
             {
-                var workoutExercise = await context.WorkoutExercises.FindAsync(workoutExerciseId);
-                if (workoutExercise == null)
-                    return Results.NotFound();
-                if (workoutExercise.WorkoutId != workoutId)
-                    return Results.BadRequest();
-                var set = new Set
+                try
                 {
-                    Id = Guid.NewGuid(),
-                    Weight = newSet.Weight,
-                    Reps = newSet.Reps,
-                    SetNumber = newSet.SetNumber,
-                    WorkoutExerciseId = workoutExerciseId,
-                };
-                await context.Sets.AddAsync(set);
-                await context.SaveChangesAsync();
-                var result = new SetDto(set.Id, set.Weight, set.Reps, set.SetNumber);
-                return Results.Created($"/api/workouts/{workoutId}/exercises/{workoutExerciseId}/sets/{set.Id}",
-                    result);
+                    var result = await service.CreateSetAsync(workoutId, workoutExerciseId, newSet);
+                    if (result is null)
+                        return Results.NotFound();
+                    return Results.Created(
+                        $"/api/workouts/{workoutId}/exercises/{workoutExerciseId}/sets/{result.SetId}",
+                        result);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new {error = ex.Message});
+                }
+                catch (ArgumentException ex)
+                {
+                    return Results.BadRequest(new {error = ex.Message});
+                }
             });
 
-        group.MapDelete("/{setId:guid}", async (ProjectContext context, Guid setId) =>
-        {
-            var set = await context.Sets.FindAsync(setId);
-            if (set == null)
-                return Results.NotFound();
-            context.Sets.Remove(set);
-            await context.SaveChangesAsync();
-            return Results.NoContent();
-        });
+        group.MapDelete("/{setId:guid}",
+            async (ISetService service, Guid setId, Guid workoutId, Guid workoutExerciseId) =>
+            {
+                var deleted = await service.DeleteSetAsync(workoutId, workoutExerciseId, setId);
+                return deleted ? Results.NoContent() : Results.NotFound();
+            });
 
-        group.MapPatch("/{setId:guid}", async (ProjectContext context, Guid setId, UpdateSetDto updatedSet) =>
-        {
-            var set = await context.Sets.FindAsync(setId);
-            if (set == null)
-                return Results.NotFound();
-            set.Weight = updatedSet.Weight;
-            set.Reps = updatedSet.Reps;
-            set.SetNumber = updatedSet.SetNumber;
-            await context.SaveChangesAsync();
-            return Results.NoContent();
-        });
+        group.MapPatch("/{setId:guid}",
+            async (ISetService service, Guid setId, Guid workoutId, Guid workoutExerciseId,
+                UpdateSetDto updateSetDto) =>
+            {
+                try
+                {
+                    var updated = await service.UpdateSetAsync(setId, workoutId, workoutExerciseId, updateSetDto);
+                    return updated ? Results.NoContent() : Results.NotFound();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new {error = ex.Message});
+                }
+                catch (ArgumentException ex)
+                {
+                    return Results.BadRequest(new {error = ex.Message});
+                }
+            });
 
         return group;
     }

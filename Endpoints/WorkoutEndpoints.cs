@@ -2,6 +2,7 @@ using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 using WorkoutTracker.Core.DTOs.Workout;
+using WorkoutTracker.Services.Interfaces;
 
 namespace WorkoutTracker.Api.Endpoints;
 
@@ -9,55 +10,35 @@ public static class WorkoutEndpoints
 {
     public static RouteGroupBuilder MapWorkouts(this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (ProjectContext context) =>
+        group.MapGet("/", async (IWorkoutService service) =>
         {
-            var result = await context.Workouts
-                .Select(w => new WorkoutDto(w.Id, w.Date, w.Note))
-                .ToListAsync();
+            var result = await service.GetWorkoutsAsync();
             return Results.Ok(result);
         });
 
-        group.MapGet("/{workoutId:guid}", async (ProjectContext context, Guid workoutId) =>
+        group.MapGet("/{workoutId:guid}", async (IWorkoutService service, Guid workoutId) =>
         {
-            var workout = await context.Workouts.FindAsync(workoutId);
-            if (workout == null)
-                return Results.NotFound();
-            var workoutDto = new WorkoutDto(workout.Id, workout.Date, workout.Note);
-            return Results.Ok(workoutDto);
+            var workoutDto = await service.GetWorkoutByIdAsync(workoutId);
+            return workoutDto == null ? Results.NotFound() : Results.Ok(workoutDto);
         });
 
-        group.MapDelete("/{workoutId:guid}", async (ProjectContext context, Guid workoutId) =>
+        group.MapDelete("/{workoutId:guid}", async (IWorkoutService service, Guid workoutId) =>
         {
-            var workout = await context.Workouts.FindAsync(workoutId);
-            if (workout == null)
-                return Results.NotFound();
-            context.Workouts.Remove(workout);
-            await context.SaveChangesAsync();
-            return Results.NoContent();
+            var deleted = await service.DeleteWorkoutAsync(workoutId);
+            return deleted ? Results.NoContent() : Results.NotFound();
         });
 
         group.MapPatch("/{workoutId:guid}",
-            async (ProjectContext context, Guid workoutId, UpdateWorkoutDto updatedWorkout) =>
+            async (IWorkoutService service, Guid workoutId, UpdateWorkoutDto updatedWorkout) =>
             {
-                var workout = await context.Workouts.FindAsync(workoutId);
-                if (workout == null)
-                    return Results.NotFound();
-                workout.Note = updatedWorkout.Note;
-                await context.SaveChangesAsync();
-                return Results.NoContent();
+                var updated = await service.UpdateWorkoutAsync(workoutId, updatedWorkout);
+                return updated ? Results.NoContent() : Results.NotFound();
             });
 
-        group.MapPost("/", async (ProjectContext context, CreateWorkoutDto createdWorkout) =>
+        group.MapPost("/", async (IWorkoutService service, CreateWorkoutDto createdWorkout) =>
         {
-            var workout = new Workout()
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now),
-                Note = createdWorkout.Note,
-            };
-            await context.Workouts.AddAsync(workout);
-            await context.SaveChangesAsync();
-            var workoutDto = new WorkoutDto(workout.Id, workout.Date, workout.Note);
-            return Results.Created($"api/workouts/{workout.Id}", workoutDto);
+            var result = await service.CreateWorkoutAsync(createdWorkout);
+            return Results.Created($"api/workouts/{result.workoutId}", result);
         });
 
 

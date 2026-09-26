@@ -2,6 +2,7 @@ using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 using WorkoutTracker.Core.DTOs.Exercise;
+using WorkoutTracker.Services.Interfaces;
 
 namespace WorkoutTracker.Api.Endpoints;
 
@@ -9,71 +10,63 @@ public static class ExerciseEndpoints
 {
     public static RouteGroupBuilder MapExerciseEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (ProjectContext context) =>
+        group.MapGet("/", async (IExerciseService service) =>
         {
-            var result = await context.Exercises
-                .Select(e => new ExerciseDto
-                (
-                    e.Id,
-                    e.Name,
-                    e.MuscleGroup
-                ))
-                .ToListAsync();
-            return Results.Ok(result);
+            var exercises = await service.GetExercisesAsync();
+            return Results.Ok(exercises);
         });
 
-        group.MapGet("/{id}", async (ProjectContext context, int id) =>
+        group.MapGet("/{id:guid}", async (IExerciseService service, Guid id) =>
         {
-            var exercise = await context.Exercises.FindAsync(id);
-            if (exercise == null)
-                return Results.NotFound();
-            var result = new ExerciseDto
-            (
-                exercise.Id,
-                exercise.Name,
-                exercise.MuscleGroup
-            );
-            return Results.Ok(result);
+            var exercise = await service.GetExerciseByIdAsync(id);
+            return exercise is null ? Results.NotFound() : Results.Ok(exercise);
         });
 
-        group.MapPatch("/{id}", async (ProjectContext context, int id, UpdateExerciseDto updatedExercise) =>
+        group.MapPatch("/{id:guid}", async (IExerciseService service, Guid id, UpdateExerciseDto updatedExercise) =>
         {
-            var exercise = await context.Exercises.FindAsync(id);
-            if (exercise == null)
-                return Results.NotFound();
-            exercise.Name = updatedExercise.Name;
-            exercise.MuscleGroup = updatedExercise.MuscleGroup;
-            await context.SaveChangesAsync();
-            return Results.NoContent();
-        });
-
-        group.MapDelete("/{id}", async (ProjectContext context, int id) =>
-        {
-            var exercise = await context.Exercises.FindAsync(id);
-            if (exercise == null)
-                return Results.NotFound();
-            context.Exercises.Remove(exercise);
-            await context.SaveChangesAsync();
-            return Results.NoContent();
-        });
-
-        group.MapPost("/", async (ProjectContext context, CreateExerciseDto addedExercise) =>
-        {
-            var exercise = new Exercise
+            try
             {
-                Name = addedExercise.Name,
-                MuscleGroup = addedExercise.MuscleGroup,
-            };
-            await context.Exercises.AddAsync(exercise);
-            await context.SaveChangesAsync();
-            var result = new ExerciseDto
-            (
-                exercise.Id,
-                exercise.Name,
-                exercise.MuscleGroup
-            );
+                var updated = await service.UpdateExerciseAsync(id, updatedExercise);
+                return updated ? Results.NoContent() : Results.NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new {error = ex.Message});
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new {error = ex.Message});
+            }
+        });
 
-            return Results.Created($"api/exercises/{exercise.Id}", result);
+        group.MapDelete("/{id:guid}", async (IExerciseService service, Guid id) =>
+        {
+            try
+            {
+                var deleted = await service.DeleteExerciseAsync(id);
+                return deleted ? Results.NoContent() : Results.NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new {error = ex.Message});
+            }
+        });
+
+        group.MapPost("/", async (IExerciseService service, CreateExerciseDto createdExerciseDto) =>
+        {
+            try
+            {
+                var result = await service.CreateExerciseAsync(createdExerciseDto);
+                return Results.Created($"api/exercises/{result.Id}", result);
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new {error = ex.Message});
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new {error = ex.Message});
+            }
         });
 
         return group;

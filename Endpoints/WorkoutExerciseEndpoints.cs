@@ -3,6 +3,7 @@ using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 using WorkoutTracker.Core.DTOs.Exercise;
 using WorkoutTracker.Core.DTOs.WorkoutExercise;
+using WorkoutTracker.Services.Interfaces;
 
 namespace WorkoutTracker.Api.Endpoints;
 
@@ -10,62 +11,47 @@ public static class WorkoutExerciseEndpoints
 {
     public static RouteGroupBuilder MapWorkoutExercise(this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (ProjectContext context, Guid workoutId) =>
+        group.MapGet("/", async (IWorkoutExerciseService service, Guid workoutId) =>
         {
-            var result = await context.WorkoutExercises
-                .Where(w => w.WorkoutId == workoutId)
-                .Select(we => new WorkoutExerciseDto(we.Id, we.ExerciseId, we.WorkoutId))
-                .ToListAsync();
+            var result = await service.GetWorkoutExercisesAsync(workoutId);
             return Results.Ok(result);
         });
 
-        group.MapDelete("/{exerciseId:guid}", async (ProjectContext context, Guid workoutId, Guid exerciseId) =>
-        {
-            var workoutExercise = await context.WorkoutExercises
-                .Where(w => w.WorkoutId == workoutId && w.ExerciseId == exerciseId)
-                .FirstOrDefaultAsync();
-            if (workoutExercise is null)
-                return Results.NotFound();
-            context.WorkoutExercises.Remove(workoutExercise);
-            await context.SaveChangesAsync();
-            return Results.NoContent();
-        });
-
-        group.MapPost("/",
-            async (ProjectContext context, CreateWorkoutExerciseDto dto, Guid workoutId) =>
+        group.MapDelete("/{workoutExerciseId:guid}",
+            async (IWorkoutExerciseService service, Guid workoutId, Guid workoutExerciseId) =>
             {
-                var workout = await context.Workouts.FindAsync(workoutId);
-                if (workout is null)
-                    return Results.NotFound();
-                var exercise = await context.Exercises.FindAsync(dto.ExerciseId);
-                if (exercise is null)
-                    return Results.NotFound();
-                var workoutExercise = new WorkoutExercise
-                {
-                    Id = Guid.NewGuid(),
-                    WorkoutId = workoutId,
-                    ExerciseId = dto.ExerciseId,
-                };
-                await context.WorkoutExercises.AddAsync(workoutExercise);
-                await context.SaveChangesAsync();
-
-                var result = new WorkoutExerciseDto(workoutExercise.Id, dto.ExerciseId, workoutId);
-                return Results.Created($"/api/workouts/{workoutId}/exercises/{workoutExercise.Id}", result);
+                var deleted = await service.DeleteWorkoutExerciseAsync(workoutId, workoutExerciseId);
+                return deleted ? Results.NoContent() : Results.NotFound();
             });
 
-        group.MapPatch("/{workoutExerciseId:guid}", async (ProjectContext context, Guid workoutId,
+        group.MapPost("/",
+            async (IWorkoutExerciseService service, CreateWorkoutExerciseDto dto, Guid workoutId) =>
+            {
+                try
+                {
+                    var result = await service.CreateWorkoutExerciseAsync(workoutId, dto);
+                    if (result is null)
+                        return Results.NotFound();
+                    return Results.Created($"/api/workouts/{workoutId}/exercises/{result.Id}", result);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new {error = ex.Message});
+                }
+            });
+
+        group.MapPatch("/{workoutExerciseId:guid}", async (IWorkoutExerciseService service, Guid workoutId,
             Guid workoutExerciseId, UpdateWorkoutExerciseDto updatedDto) =>
         {
-            var workoutExercise = await context.WorkoutExercises
-                .FirstOrDefaultAsync(we => we.Id == workoutExerciseId && we.WorkoutId == workoutId);
-            if (workoutExercise is null)
-                return Results.NotFound();
-            var exercise = await context.Exercises.FindAsync(updatedDto.ExerciseId);
-            if (exercise is null)
-                return Results.NotFound();
-            workoutExercise.ExerciseId = updatedDto.ExerciseId;
-            await context.SaveChangesAsync();
-            return Results.NoContent();
+            try
+            {
+                var updated = await service.UpdateWorkoutExerciseAsync(workoutId, workoutExerciseId, updatedDto);
+                return updated ? Results.NoContent() : Results.NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new {error = ex.Message});
+            }
         });
 
         return group;
