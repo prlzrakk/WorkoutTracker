@@ -1,7 +1,191 @@
 ﻿@page "/"
+@using System.Globalization
+@inject HttpClient Http
+@using WorkoutTracker.Core.DTOs.Workout
+@using WorkoutTracker.Core.DTOs.Exercise
+@using WorkoutTracker.Core.DTOs.WorkoutExercise
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Workout Tracker</PageTitle>
 
-<h1>Hello, world!</h1>
+<header class="app-header">
+    <div class="logo-badge">
+        <img class="logo-icon" src="logo.svg" alt="Logo">
+    </div>
+    <button class="menu-button @(isMenuOpen ? "open" : "")"
+            type="button"
+            aria-label="@(isMenuOpen ? "Close menu" : "Open menu")"
+            aria-expanded="@isMenuOpen"
+            @onclick="ToggleMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+</header>
 
-Welcome to your new app.
+<div class="menu-backdrop @(isMenuOpen ? "visible" : "")" @onclick="CloseMenu"></div>
+
+<aside class="side-menu @(isMenuOpen ? "open" : "")" aria-hidden="@(!isMenuOpen)">
+    <nav class="side-menu-nav" aria-label="Main navigation">
+        <NavLink class="side-menu-link" ActiveClass="active" href="" Match="NavLinkMatch.All" @onclick="CloseMenu">
+            Home
+        </NavLink>
+        <NavLink class="side-menu-link" ActiveClass="active" href="workouts" @onclick="CloseMenu">
+            Workouts
+        </NavLink>
+        <NavLink class="side-menu-link" ActiveClass="active" href="calendar" @onclick="CloseMenu">
+            Calendar
+        </NavLink>
+    </nav>
+
+    <a class="side-menu-cta" href="/create-workout" @onclick="CloseMenu">Track a workout</a>
+</aside>
+
+<main class="home-page">
+    <p class="date-label">@TodayLabel</p>
+
+    <h1 class="greeting">
+        Hello, <span>There!</span>
+    </h1>
+
+    <section class="panel">
+        <h2>Gym this week</h2>
+
+        <div class="week-strip">
+            @foreach (var day in WeekDays)
+            {
+                <div class="week-day">
+                    <span class="week-name">@day.Name</span>
+                    <span class="week-number @(day.Active ? "active" : "")">@day.Number</span>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="panel today-workout-panel">
+        <div class="section-head">
+            <h2>Todays Workout</h2>
+            <a href="/workouts">See all</a>
+        </div>
+
+        @if (isLoadingTodayWorkout)
+        {
+            <p class="panel-state">Loading workout...</p>
+        }
+        else if (todayExercises.Count == 0)
+        {
+            <a class="empty-workout-button" href="/create-workout" aria-label="Track today's workout">+</a>
+        }
+        else
+        {
+            <div class="workout-list">
+                @foreach (var exercise in todayExercises)
+                {
+                    <a class="workout-row" href="@($"/workouts/{todayWorkoutId}")">
+                        <span>@exercise.Name</span>
+                        <span class="row-actions">-></span>
+                    </a>
+                }
+            </div>
+
+            <a class="add-button" href="@($"/workouts/{todayWorkoutId}")" aria-label="Add exercise">+</a>
+        }
+    </section>
+
+    <section class="panel">
+        <h2>Stats</h2>
+
+        <div class="stats-grid">
+            <StatCircle Label="workouts" Value="4" />
+            <StatCircle Label="volume" Value="1800 kg" ValueClass="small" />
+            <StatCircle Label="streak" Value="1" />
+        </div>
+    </section>
+
+    <a class="track-button" href="/create-workout">Track a workout</a>
+</main>
+
+@code {
+    private readonly DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+    private List<WeekDay> WeekDays = [];
+    private List<TodayExercise> todayExercises = [];
+    private Guid? todayWorkoutId;
+    private bool isLoadingTodayWorkout = true;
+    private bool isMenuOpen;
+
+    private string TodayLabel => DateTime.Today.ToString("ddd, d MMMM yyyy", CultureInfo.InvariantCulture);
+
+    private void ToggleMenu()
+    {
+        isMenuOpen = !isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        isMenuOpen = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        WeekDays = BuildWeekDays([]);
+
+        try
+        {
+            var workouts = await Http.GetFromJsonAsync<List<WorkoutDto>>("api/workouts") ?? [];
+            WeekDays = BuildWeekDays(workouts);
+
+            var todayWorkout = workouts.FirstOrDefault(workout => workout.Date == today);
+            if (todayWorkout is null)
+            {
+                return;
+            }
+
+            todayWorkoutId = todayWorkout.workoutId;
+
+            var workoutExercises = await Http.GetFromJsonAsync<List<WorkoutExerciseDto>>(
+                $"api/workouts/{todayWorkout.workoutId}/exercises") ?? [];
+
+            if (workoutExercises.Count == 0)
+            {
+                return;
+            }
+
+            var exercises = await Http.GetFromJsonAsync<List<ExerciseDto>>("api/exercises") ?? [];
+            var exerciseNames = exercises.ToDictionary(exercise => exercise.Id, exercise => exercise.Name);
+
+            todayExercises = workoutExercises
+                .Select(workoutExercise => new TodayExercise(
+                    workoutExercise.Id,
+                    exerciseNames.GetValueOrDefault(workoutExercise.ExerciseId, "Unknown exercise")))
+                .ToList();
+        }
+        catch (HttpRequestException)
+        {
+            todayExercises = [];
+            todayWorkoutId = null;
+        }
+        finally
+        {
+            isLoadingTodayWorkout = false;
+        }
+    }
+
+    private List<WeekDay> BuildWeekDays(List<WorkoutDto> workouts)
+    {
+        var monday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+        var workoutDates = workouts.Select(workout => workout.Date).ToHashSet();
+
+        return Enumerable.Range(0, 7)
+            .Select(offset =>
+            {
+                var date = monday.AddDays(offset);
+                return new WeekDay(
+                    date.ToString("ddd", CultureInfo.InvariantCulture),
+                    date.Day.ToString(CultureInfo.InvariantCulture),
+                    workoutDates.Contains(date));
+            })
+            .ToList();
+    }
+
+    private sealed record WeekDay(string Name, string Number, bool Active);
+    private sealed record TodayExercise(Guid WorkoutExerciseId, string Name);
+}

@@ -30,4 +30,8 @@
       <None Remove="Properties\launchSettings.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\WorkoutTracker.Core\WorkoutTracker.Core.csproj" />
+    </ItemGroup>
+
 </Project>

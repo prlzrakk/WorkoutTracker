@@ -1,0 +1,25 @@
+@using Microsoft.AspNetCore.Components
+
+<div class="stat-circle">
+    <svg class="arc-label" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+            <path id="@ArcId" d="M 10 70 A 50 50 0 0 1 110 70" />
+        </defs>
+
+        <text>
+            <textPath href="@($"#{ArcId}")" startOffset="50%" text-anchor="middle">
+                @Label
+            </textPath>
+        </text>
+    </svg>
+
+    <strong class="@ValueClass">@Value</strong>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public string? ValueClass { get; set; }
+
+    private string ArcId { get; } = $"arc-{Guid.NewGuid():N}";
+}
