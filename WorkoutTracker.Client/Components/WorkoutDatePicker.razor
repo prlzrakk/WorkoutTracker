@@ -1,0 +1,126 @@
+@using System.Globalization
+<div class="date-picker-wrap">
+    <button class="date-field"
+            type="button"
+            aria-expanded="@isCalendarOpen"
+            aria-controls="workout-date-calendar"
+            @onclick="ToggleCalendar">
+        <span class="calendar-glyph" aria-hidden="true"></span>
+        <span>@DateLabel</span>
+        <span class="field-chevron" aria-hidden="true">@(isCalendarOpen ? "⌄" : "›")</span>
+    </button>
+
+    @if (isCalendarOpen)
+    {
+        <div class="calendar-popover" id="workout-date-calendar">
+            <div class="calendar-head">
+                <button class="calendar-nav-button" type="button" aria-label="Previous month"
+                        @onclick="ShowPreviousMonth">‹
+                </button>
+                <strong>@VisibleMonthLabel</strong>
+                <button class="calendar-nav-button" type="button" aria-label="Next month" @onclick="ShowNextMonth">›
+                </button>
+            </div>
+
+            <div class="calendar-weekdays">
+                @foreach (var weekday in WeekdayLabels)
+                {
+                    <span>@weekday</span>
+                }
+            </div>
+
+            <div class="calendar-grid">
+                @foreach (var calendarDay in CalendarDays)
+                {
+                    @if (calendarDay is null)
+                    {
+                        <span class="calendar-day empty" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        var day = calendarDay.Value;
+
+                        <button
+                            class="calendar-day @(IsSelected(day) ? "selected" : null) @(IsToday(day) ? "today" : null)"
+                            type="button"
+                            @onclick="() => SelectDate(day)">
+                            @day.Day
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code
+{
+    private static readonly string[] WeekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    private DateOnly visibleMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private bool isCalendarOpen;
+
+    [Parameter]
+    public DateOnly Value { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+    [Parameter]
+    public EventCallback<DateOnly> ValueChanged { get; set; }
+
+    private string DateLabel => Value.ToDateTime(TimeOnly.MinValue)
+        .ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture);
+
+    private string VisibleMonthLabel => visibleMonth.ToDateTime(TimeOnly.MinValue)
+        .ToString("MMMM yyyy", CultureInfo.InvariantCulture);
+
+    private IEnumerable<DateOnly?> CalendarDays
+    {
+        get
+        {
+            var daysBeforeMonth = ((int)visibleMonth.DayOfWeek + 6) % 7;
+
+            for (var i = 0; i < daysBeforeMonth; i++)
+            {
+                yield return null;
+            }
+
+            var daysInMonth = DateTime.DaysInMonth(visibleMonth.Year, visibleMonth.Month);
+
+            for (var day = 1; day <= daysInMonth; day++)
+            {
+                yield return new DateOnly(visibleMonth.Year, visibleMonth.Month, day);
+            }
+        }
+    }
+
+    private void ToggleCalendar()
+    {
+        isCalendarOpen = !isCalendarOpen;
+        visibleMonth = new DateOnly(Value.Year, Value.Month, 1);
+    }
+
+    private void ShowPreviousMonth()
+    {
+        visibleMonth = visibleMonth.AddMonths(-1);
+    }
+
+    private void ShowNextMonth()
+    {
+        visibleMonth = visibleMonth.AddMonths(1);
+    }
+
+    private async Task SelectDate(DateOnly date)
+    {
+        visibleMonth = new DateOnly(date.Year, date.Month, 1);
+        isCalendarOpen = false;
+        await ValueChanged.InvokeAsync(date);
+    }
+
+    private bool IsSelected(DateOnly date)
+    {
+        return date == Value;
+    }
+
+    private static bool IsToday(DateOnly date)
+    {
+        return date == DateOnly.FromDateTime(DateTime.Today);
+    }
+}

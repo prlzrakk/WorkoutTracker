@@ -35,8 +35,7 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
     {
         var workout = new Workout
         {
-            Date = DateOnly.FromDateTime(DateTime.Now),
-            Note = createWorkoutDto.Note
+            Date = createWorkoutDto.Date
         };
         await context.Workouts.AddAsync(workout);
         await context.SaveChangesAsync();

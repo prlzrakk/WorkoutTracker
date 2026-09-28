@@ -1,0 +1,42 @@
+@using WorkoutTracker.Client.Models
+<div class="sets-table">
+    <div class="sets-table-head">
+        <span>SET</span>
+        <span>REPS</span>
+        <span>WEIGHT</span>
+    </div>
+
+    @foreach (var set in Exercise.Sets)
+    {
+        <div class="set-row" @key="set">
+            <span class="set-number">@set.Number</span>
+            <input class="set-input"
+                   type="number"
+                   min="0"
+                   @bind="set.Reps"
+                   placeholder="—"/>
+            <label class="weight-input-wrap">
+                <input class="set-input weight"
+                       type="number"
+                       min="0"
+                       @bind="set.Weight"
+                       placeholder="—"/>
+                <span>kg</span>
+            </label>
+        </div>
+    }
+</div>
+
+<button class="add-set-button" type="button" @onclick="AddSet">
+    <span>+</span> Add set
+</button>
+
+@code
+{
+    [Parameter, EditorRequired] public DraftExercise Exercise { get; set; } = default!;
+
+    private void AddSet()
+    {
+        Exercise.Sets.Add(new DraftSet { Number = Exercise.Sets.Count + 1 });
+    }
+}

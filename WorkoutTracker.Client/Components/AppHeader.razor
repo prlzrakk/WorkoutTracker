@@ -1,0 +1,47 @@
+<header class="app-header">
+    <div class="logo-badge">
+        <img class="logo-icon" src="logo.svg" alt="Logo">
+    </div>
+
+    <button class="menu-button @(isMenuOpen ? "open" : "")"
+            type="button"
+            aria-label="@(isMenuOpen ? "Close menu" : "Open menu")"
+            aria-expanded="@isMenuOpen"
+            @onclick="ToggleMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+</header>
+
+<div class="menu-backdrop @(isMenuOpen ? "visible" : "")" @onclick="CloseMenu"></div>
+
+<aside class="side-menu @(isMenuOpen ? "open" : "")" aria-hidden="@(!isMenuOpen)">
+    <nav class="side-menu-nav" aria-label="Main navigation">
+        <NavLink class="side-menu-link" ActiveClass="active" href="" Match="NavLinkMatch.All" @onclick="CloseMenu">
+            Home
+        </NavLink>
+        <NavLink class="side-menu-link" ActiveClass="active" href="workouts" @onclick="CloseMenu">
+            Workouts
+        </NavLink>
+        <NavLink class="side-menu-link" ActiveClass="active" href="calendar" @onclick="CloseMenu">
+            Calendar
+        </NavLink>
+    </nav>
+
+    <a class="side-menu-cta" href="/create-workout" @onclick="CloseMenu">Track a workout</a>
+</aside>
+
+@code {
+    private bool isMenuOpen;
+
+    private void ToggleMenu()
+    {
+        isMenuOpen = !isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        isMenuOpen = false;
+    }
+}

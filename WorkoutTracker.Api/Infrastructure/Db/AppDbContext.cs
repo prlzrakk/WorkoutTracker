@@ -31,7 +31,6 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
     {
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Name).IsRequired();
-        builder.Property(e => e.MuscleGroup).IsRequired();
         builder.HasMany(e => e.WorkoutExercises).WithOne(e => e.Exercise).HasForeignKey(e => e.ExerciseId);
     }
 }

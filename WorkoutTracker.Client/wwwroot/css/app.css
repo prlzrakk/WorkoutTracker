@@ -31,6 +31,16 @@ button {
     font: inherit;
 }
 
+input[type="number"] {
+    appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    margin: 0;
+    appearance: none;
+}
+
 .app-shell {
     min-height: 100vh;
     background: var(--bg);
@@ -45,12 +55,17 @@ button {
     padding: 12px 14px;
 }
 
+.logo-badge {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+}
 
 .logo-icon {
-    color: var(--text);
-    font-size: 13px;
-    
-    font-weight: 800;
+    width: 48px;
+    height: 48px;
+    display: block;
 }
 
 .menu-button {
@@ -364,4 +379,451 @@ button {
     display: grid;
     place-items: center;
     font-weight: 900;
+}
+
+.create-workout-page {
+    width: min(100%, 430px);
+    margin: 0 auto;
+    padding: 18px 16px 64px;
+}
+
+.back-button {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 42px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+}
+
+.create-title {
+    margin: 24px 0 32px;
+    color: var(--text);
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.field-label {
+    display: block;
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.date-field,
+.workout-name-input {
+    width: 100%;
+    min-height: 52px;
+    border: 2px solid #4c4c4c;
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.date-picker-wrap {
+    position: relative;
+    margin-bottom: 34px;
+}
+
+.date-field {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 0;
+    padding: 0 22px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.calendar-glyph {
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--green);
+    border-radius: 4px;
+    position: relative;
+}
+
+.calendar-glyph::before,
+.calendar-glyph::after {
+    content: "";
+    position: absolute;
+    top: -8px;
+    width: 3px;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--green);
+}
+
+.calendar-glyph::before {
+    left: 4px;
+}
+
+.calendar-glyph::after {
+    right: 4px;
+}
+
+.field-chevron {
+    color: var(--muted);
+    font-size: 32px;
+    line-height: 1;
+}
+
+.calendar-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: 0;
+    z-index: 15;
+    border: 2px solid #3cab22;
+    border-radius: 14px;
+    background: var(--panel);
+    padding: 14px;
+    box-shadow: 0 0 18px rgba(110, 255, 63, 0.12), 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+.calendar-head {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.calendar-head strong {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.calendar-nav-button {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.calendar-weekdays {
+    margin-bottom: 8px;
+}
+
+.calendar-weekdays span {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    min-width: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text);
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.calendar-day.today {
+    color: var(--green);
+    box-shadow: inset 0 0 0 1px #3cab22;
+}
+
+.calendar-day.selected {
+    background: radial-gradient(circle at 35% 30%, #8cff4f, #42b828 70%);
+    color: white;
+    box-shadow: 0 0 12px rgba(110, 255, 63, 0.2);
+}
+
+.calendar-day.empty {
+    pointer-events: none;
+}
+
+.workout-name-input {
+    margin-bottom: 36px;
+    padding: 0 22px;
+    outline: none;
+    border-color: #3cab22;
+    font-weight: 600;
+}
+
+.workout-name-input::placeholder,
+.exercise-name-input::placeholder,
+.set-input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+.exercise-editor-list {
+    display: grid;
+    gap: 20px;
+}
+
+.exercise-editor-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--panel);
+    padding: 24px 24px 22px 32px;
+    box-shadow: 0 0 18px rgba(110, 255, 63, 0.08), 0 8px 22px rgba(0, 0, 0, 0.25);
+}
+
+.exercise-editor-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 6px;
+    background: #3d941d;
+}
+
+.exercise-name-control {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.exercise-search {
+    min-width: 0;
+}
+
+.exercise-name-input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.exercise-suggestions {
+    display: grid;
+    margin-top: 12px;
+    overflow: hidden;
+    border: 1px solid #3cab22;
+    border-radius: 10px;
+    background: #24211f;
+}
+
+.exercise-suggestion {
+    min-height: 40px;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.exercise-suggestion:last-child {
+    border-bottom: 0;
+}
+
+.exercise-suggestion:hover {
+    background: var(--row);
+}
+
+.exercise-suggestion.create {
+    color: var(--green);
+    cursor: default;
+}
+
+.exercise-suggestion.message {
+    color: var(--muted);
+    cursor: default;
+}
+
+.exercise-chevron {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sets-table {
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.sets-table-head,
+.set-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    column-gap: 12px;
+}
+
+.sets-table-head {
+    min-height: 34px;
+    padding: 0 24px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.sets-table-head span:nth-child(2) {
+    text-align: center;
+}
+
+.sets-table-head span:nth-child(3) {
+    text-align: right;
+}
+
+.set-row {
+    min-height: 50px;
+    padding: 0 24px;
+    background: #2d2d2d;
+}
+
+.set-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.set-input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.set-input.weight {
+    padding-right: 26px;
+    text-align: right;
+}
+
+.weight-input-wrap {
+    position: relative;
+    display: block;
+    color: var(--muted);
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.weight-input-wrap span {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.add-set-button {
+    min-height: 34px;
+    margin-top: 20px;
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.add-set-button span,
+.add-exercise-button span {
+    font-size: 30px;
+    line-height: 1;
+}
+
+.add-exercise-button {
+    width: 100%;
+    min-height: 64px;
+    margin-top: 36px;
+    border: 2px dashed #3cab22;
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--green);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.save-workout-button {
+    width: 100%;
+    min-height: 54px;
+    margin-top: 22px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--green-dark);
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.save-workout-button:disabled {
+    cursor: default;
+    opacity: 0.65;
+}
+
+.form-error {
+    margin: 12px 0 0;
+    color: #ff6b6b;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
 }

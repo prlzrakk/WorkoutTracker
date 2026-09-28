@@ -1,0 +1,87 @@
+@using WorkoutTracker.Client.Models
+@using WorkoutTracker.Core.DTOs.Exercise
+
+<section class="exercise-editor-card">
+    <div class="exercise-name-control">
+        <div class="exercise-search">
+            <input class="exercise-name-input"
+                   value="@Exercise.SearchText"
+                   placeholder="Exercise name"
+                   @onfocus="() => Exercise.IsSearchOpen = true"
+                   @oninput="eventArgs => UpdateExerciseSearch(eventArgs.Value?.ToString())"/>
+
+            @if (Exercise.IsSearchOpen)
+            {
+                var query = Exercise.SearchText.Trim();
+                var matches = GetExerciseMatches(query).ToList();
+                var canCreate = !string.IsNullOrWhiteSpace(query) &&
+                                !AvailableExercises.Any(e => string.Equals(e.Name, query, StringComparison.OrdinalIgnoreCase));
+
+                @if (matches.Count > 0 || canCreate)
+                {
+                    <div class="exercise-suggestions">
+                        @foreach (var match in matches)
+                        {
+                            <button class="exercise-suggestion"
+                                    type="button"
+                                    @onclick="() => SelectExercise(match)">
+                                @match.Name
+                            </button>
+                        }
+
+                        @if (canCreate)
+                        {
+                            <span class="exercise-suggestion create">
+                                + New exercise: "@query"
+                            </span>
+                        }
+                    </div>
+                }
+            }
+        </div>
+
+        <button class="exercise-chevron"
+                type="button"
+                aria-label="Show exercises"
+                @onclick="() => Exercise.IsSearchOpen = !Exercise.IsSearchOpen">
+            ⌄
+        </button>
+    </div>
+
+    <SetsTable Exercise="Exercise" />
+</section>
+
+@code {
+    private const int MaxExerciseSuggestions = 6;
+
+    [Parameter, EditorRequired] public DraftExercise Exercise { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<ExerciseDto> AvailableExercises { get; set; } = [];
+
+    private void UpdateExerciseSearch(string? value)
+    {
+        Exercise.SearchText = value ?? string.Empty;
+        Exercise.ExerciseId = null;
+        Exercise.IsSearchOpen = true;
+    }
+
+    private void SelectExercise(ExerciseDto exercise)
+    {
+        Exercise.ExerciseId = exercise.Id;
+        Exercise.SearchText = exercise.Name;
+        Exercise.IsSearchOpen = false;
+    }
+
+    private IEnumerable<ExerciseDto> GetExerciseMatches(string query)
+    {
+        var source = AvailableExercises.OrderBy(e => e.Name);
+
+        if (string.IsNullOrWhiteSpace(query))
+            return source.Take(MaxExerciseSuggestions);
+
+        return source
+            .Where(e => e.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Take(MaxExerciseSuggestions);
+    }
+
+}

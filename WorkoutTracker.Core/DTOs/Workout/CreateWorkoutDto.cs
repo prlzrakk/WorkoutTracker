@@ -1,3 +1,3 @@
 namespace WorkoutTracker.Core.DTOs.Workout;
 
-public record CreateWorkoutDto(string? Note);
+public record CreateWorkoutDto(DateOnly Date);

@@ -14,8 +14,7 @@ public class ExerciseService(ProjectContext context) : IExerciseService
             .Select(e => new ExerciseDto
             (
                 e.Id,
-                e.Name,
-                e.MuscleGroup
+                e.Name
             ))
             .ToListAsync();
     }
@@ -24,18 +23,16 @@ public class ExerciseService(ProjectContext context) : IExerciseService
     {
         return await context.Exercises
             .Where(e => e.Id == id)
-            .Select(e => new ExerciseDto(e.Id, e.Name, e.MuscleGroup))
+            .Select(e => new ExerciseDto(e.Id, e.Name))
             .FirstOrDefaultAsync();
     }
 
     public async Task<ExerciseDto> CreateExerciseAsync(CreateExerciseDto createExerciseDto)
     {
-        if (string.IsNullOrWhiteSpace(createExerciseDto.Name) ||
-            string.IsNullOrWhiteSpace(createExerciseDto.MuscleGroup))
+        if (string.IsNullOrWhiteSpace(createExerciseDto.Name))
             throw new ArgumentException("Поле не может быть пустым");
 
         var name = createExerciseDto.Name.Trim();
-        var muscleGroup = createExerciseDto.MuscleGroup.Trim();
         var exists = await context.Exercises.AnyAsync(e => e.Name.ToLower() == name.ToLower());
         if (exists)
             throw new InvalidOperationException("Такое упражнение уже существует");
@@ -43,7 +40,6 @@ public class ExerciseService(ProjectContext context) : IExerciseService
         var exercise = new Exercise
         {
             Name = name,
-            MuscleGroup = muscleGroup,
         };
 
         await context.Exercises.AddAsync(exercise);
@@ -52,8 +48,7 @@ public class ExerciseService(ProjectContext context) : IExerciseService
         var result = new ExerciseDto
         (
             exercise.Id,
-            exercise.Name,
-            exercise.MuscleGroup
+            exercise.Name
         );
         return result;
     }
@@ -64,12 +59,10 @@ public class ExerciseService(ProjectContext context) : IExerciseService
         if (exercise == null)
             return false;
 
-        if (string.IsNullOrWhiteSpace(updateExerciseDto.Name) ||
-            string.IsNullOrWhiteSpace(updateExerciseDto.MuscleGroup))
+        if (string.IsNullOrWhiteSpace(updateExerciseDto.Name))
             throw new ArgumentException("Поле не может быть пустым");
 
         var name = updateExerciseDto.Name.Trim();
-        var muscleGroup = updateExerciseDto.MuscleGroup.Trim();
 
         var exists = await context.Exercises.AnyAsync(e =>
             e.Name.ToLower() == name.ToLower() &&
@@ -79,7 +72,6 @@ public class ExerciseService(ProjectContext context) : IExerciseService
             throw new InvalidOperationException("Такое упражнение уже существует");
 
         exercise.Name = name;
-        exercise.MuscleGroup = muscleGroup;
 
         await context.SaveChangesAsync();
         return true;
