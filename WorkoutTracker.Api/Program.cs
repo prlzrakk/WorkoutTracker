@@ -1,4 +1,5 @@
 using Infrastructure.Db;
+using Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WorkoutTracker.Api.Endpoints;
@@ -17,7 +18,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("ClientApp", policy =>
         policy.WithOrigins("http://localhost:5202", "https://localhost:7176")
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 builder.Services.AddDbContext<ProjectContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -30,7 +32,7 @@ builder.Services
     .AddIdentityCookies();
 
 builder.Services
-    .AddIdentityCore<IdentityUser>()
+    .AddIdentityCore<ApplicationUser>()
     .AddEntityFrameworkStores<ProjectContext>()
     .AddApiEndpoints();
 
@@ -48,16 +50,12 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+app.MapRegisterEndpoint();
 app.MapGroup("api/exercises").RequireAuthorization().MapExerciseEndpoints();
 app.MapGroup("/api/workouts/{workoutId:guid}/exercises/{workoutExerciseId:guid}/sets").RequireAuthorization().MapSets();
 app.MapGroup("/api/workouts").RequireAuthorization().MapWorkouts();
 app.MapGroup("api/workouts/{workoutId:guid}/exercises").RequireAuthorization().MapWorkoutExercise();
-app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager) =>
-    {
-        await signInManager.SignOutAsync();
-        return Results.Ok();
-    })
-    .RequireAuthorization();
-app.MapIdentityApi<IdentityUser>();
+
+app.MapIdentityApi<ApplicationUser>();
 
 app.Run();

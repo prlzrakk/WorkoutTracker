@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Infrastructure.Db;
 
-public class ProjectContext : IdentityDbContext<IdentityUser>
+public class ProjectContext : IdentityDbContext<ApplicationUser>
 {
     public ProjectContext(DbContextOptions<ProjectContext> options)
         : base(options)
