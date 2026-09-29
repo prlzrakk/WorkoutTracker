@@ -34,33 +34,6 @@
     font-weight: 900;
 }
 
-.exercise-editor-list {
-    display: grid;
-    gap: 20px;
-}
-
-.add-exercise-button {
-    width: 100%;
-    min-height: 64px;
-    margin-top: 36px;
-    border: 2px dashed #3cab22;
-    border-radius: 12px;
-    background: var(--panel);
-    color: var(--green);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    font-size: 20px;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-.add-exercise-button span {
-    font-size: 30px;
-    line-height: 1;
-}
-
 .save-workout-button {
     width: 100%;
     min-height: 54px;

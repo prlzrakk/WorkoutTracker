@@ -1,11 +1,13 @@
 @page "/workouts/{WorkoutId:guid}"
 @using System.Globalization
+@using WorkoutTracker.Client.Models
 @using WorkoutTracker.Core.DTOs.Exercise
 @using WorkoutTracker.Core.DTOs.Set
 @using WorkoutTracker.Core.DTOs.Workout
 @using WorkoutTracker.Core.DTOs.WorkoutExercise
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject WorkoutDraftSaver WorkoutDraftSaver
 
 <PageTitle>Workout</PageTitle>
 
@@ -66,9 +68,25 @@
             }
         </div>
 
-        <button class="add-workout-exercise-button" type="button">
-            <span>+</span> Add exercise
-        </button>
+        <DraftExerciseList
+            Exercises="exercisesToAdd"
+            AvailableExercises="availableExercises"
+            ExercisesChanged="OnExercisesToAddChanged" />
+
+        @if (exercisesToAdd.Count > 0)
+        {
+            <button class="save-added-exercises-button"
+                    type="button"
+                    disabled="@isSavingExercises"
+                    @onclick="SaveAddedExercises">
+                @(isSavingExercises ? "Saving..." : "Save added exercises")
+            </button>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(saveError))
+        {
+            <p class="save-added-exercises-error">@saveError</p>
+        }
 
         <section class="workout-summary">
             <h2>Workout Summary</h2>
@@ -90,9 +108,12 @@
 
 @code {
     [Parameter] public Guid WorkoutId { get; set; }
-
+    private List<DraftExercise> exercisesToAdd = [];
+    private List<ExerciseDto> availableExercises = [];
     private bool isLoading = true;
+    private bool isSavingExercises;
     private string? error;
+    private string? saveError;
     private List<WorkoutExerciseView> workoutExercises = [];
 
     private int TotalSets => workoutExercises.Sum(exercise => exercise.Sets.Count);
@@ -123,8 +144,8 @@
             var workoutExerciseDtos = await Http.GetFromJsonAsync<List<WorkoutExerciseDto>>(
                 $"api/workouts/{WorkoutId}/exercises") ?? [];
 
-            var exercises = await Http.GetFromJsonAsync<List<ExerciseDto>>("api/exercises") ?? [];
-            var exerciseNames = exercises.ToDictionary(exercise => exercise.Id, exercise => exercise.Name);
+            availableExercises = await Http.GetFromJsonAsync<List<ExerciseDto>>("api/exercises") ?? [];
+            var exerciseNames = availableExercises.ToDictionary(exercise => exercise.Id, exercise => exercise.Name);
 
             List<WorkoutExerciseView> loadedExercises = [];
 
@@ -155,6 +176,47 @@
     private void GoBack()
     {
         Navigation.NavigateTo("/workouts");
+    }
+
+    private void OnExercisesToAddChanged()
+    {
+        saveError = null;
+    }
+
+    private async Task SaveAddedExercises()
+    {
+        if (isSavingExercises)
+            return;
+
+        isSavingExercises = true;
+        saveError = null;
+
+        try
+        {
+            var result = await WorkoutDraftSaver.SaveExercisesToWorkoutAsync(
+                WorkoutId,
+                exercisesToAdd,
+                availableExercises);
+
+            if (!result.Success)
+            {
+                saveError = result.ErrorMessage;
+                return;
+            }
+
+            workoutExercises.AddRange(result.Exercises.Select(exercise =>
+                new WorkoutExerciseView(exercise.WorkoutExerciseId, exercise.Name, exercise.Sets)));
+
+            exercisesToAdd = [];
+        }
+        catch (HttpRequestException)
+        {
+            saveError = "Could not connect to the API";
+        }
+        finally
+        {
+            isSavingExercises = false;
+        }
     }
 
     private async Task DeleteExercise(Guid workoutExerciseId)

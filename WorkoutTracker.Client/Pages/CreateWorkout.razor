@@ -1,15 +1,14 @@
 @page "/create-workout"
 @using WorkoutTracker.Client.Models
 @using WorkoutTracker.Core.DTOs.Exercise
-@using WorkoutTracker.Core.DTOs.Set
 @using WorkoutTracker.Core.DTOs.Workout
-@using WorkoutTracker.Core.DTOs.WorkoutExercise
 @inject NavigationManager Navigation
 @inject HttpClient Http
+@inject WorkoutDraftSaver WorkoutDraftSaver
 
 <PageTitle>Create Workout</PageTitle>
 
-<AppHeader />
+<AppHeader/>
 
 <main class="create-workout-page">
     <button class="back-button" type="button" aria-label="Back" @onclick="GoBack">←</button>
@@ -17,21 +16,9 @@
     <h1 class="create-title">Create Workout</h1>
 
     <label class="field-label">DATE</label>
-    <WorkoutDatePicker @bind-Value="workoutDate" />
+    <WorkoutDatePicker @bind-Value="workoutDate"/>
 
-    <div class="exercise-editor-list">
-        @foreach (var exercise in exercises)
-        {
-            <ExerciseCard
-                @key="exercise"
-                Exercise="exercise"
-                AvailableExercises="availableExercises" />
-        }
-    </div>
-
-    <button class="add-exercise-button" type="button" @onclick="AddExercise">
-        <span>+</span> Add exercise
-    </button>
+    <DraftExerciseList Exercises="exercises" AvailableExercises="availableExercises"/>
 
     <button class="save-workout-button" type="button" disabled="@isSaving" @onclick="SaveWorkout">
         @(isSaving ? "Saving..." : "Save workout")
@@ -67,11 +54,6 @@
         Navigation.NavigateTo("/");
     }
 
-    private void AddExercise()
-    {
-        exercises.Add(new DraftExercise());
-    }
-
     private async Task SaveWorkout()
     {
         if (isSaving)
@@ -82,35 +64,7 @@
 
         try
         {
-            List<(DraftExercise Exercise, Guid ExerciseId)> exercisesToSave = [];
-
-            foreach (var exercise in exercises)
-            {
-                var exerciseName = exercise.SearchText.Trim();
-                if (string.IsNullOrWhiteSpace(exerciseName))
-                    continue;
-
-                var exerciseId = exercise.ExerciseId ?? FindExerciseIdByName(exerciseName);
-
-                if (exerciseId is null)
-                {
-                    var createdExercise = await CreateExerciseAsync(exerciseName);
-                    if (createdExercise is null)
-                    {
-                        saveError = $"Exercise \"{exerciseName}\" was not saved";
-                        return;
-                    }
-
-                    availableExercises.Add(createdExercise);
-                    exercise.ExerciseId = createdExercise.Id;
-                    exercise.SearchText = createdExercise.Name;
-                    exerciseId = createdExercise.Id;
-                }
-
-                exercisesToSave.Add((exercise, exerciseId.Value));
-            }
-
-            if (exercisesToSave.Count == 0)
+            if (!exercises.Any(exercise => !string.IsNullOrWhiteSpace(exercise.SearchText)))
             {
                 saveError = "Add at least one exercise";
                 return;
@@ -130,40 +84,15 @@
                 return;
             }
 
-            foreach (var (exercise, exerciseId) in exercisesToSave)
+            var saveExercisesResult = await WorkoutDraftSaver.SaveExercisesToWorkoutAsync(
+                workout.workoutId,
+                exercises,
+                availableExercises);
+
+            if (!saveExercisesResult.Success)
             {
-                var workoutExerciseResponse = await Http.PostAsJsonAsync(
-                    $"api/workouts/{workout.workoutId}/exercises",
-                    new CreateWorkoutExerciseDto(exerciseId));
-
-                if (!workoutExerciseResponse.IsSuccessStatusCode)
-                {
-                    saveError = $"Exercise \"{exercise.SearchText}\" was not added to workout";
-                    return;
-                }
-
-                var workoutExercise = await workoutExerciseResponse.Content.ReadFromJsonAsync<WorkoutExerciseDto>();
-                if (workoutExercise is null)
-                {
-                    saveError = $"Exercise \"{exercise.SearchText}\" was not added to workout";
-                    return;
-                }
-
-                foreach (var set in exercise.Sets)
-                {
-                    if (set.Reps is null || set.Weight is null)
-                        continue;
-
-                    var setResponse = await Http.PostAsJsonAsync(
-                        $"api/workouts/{workout.workoutId}/exercises/{workoutExercise.Id}/sets",
-                        new CreateSetDto(set.Weight.Value, set.Reps.Value, set.Number));
-
-                    if (!setResponse.IsSuccessStatusCode)
-                    {
-                        saveError = $"Set {set.Number} for \"{exercise.SearchText}\" was not saved";
-                        return;
-                    }
-                }
+                saveError = saveExercisesResult.ErrorMessage;
+                return;
             }
 
             Navigation.NavigateTo("/");
@@ -178,29 +107,4 @@
         }
     }
 
-    private Guid? FindExerciseIdByName(string name)
-    {
-        var trimmedName = name.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedName))
-            return null;
-
-        return availableExercises.FirstOrDefault(e =>
-            string.Equals(e.Name, trimmedName, StringComparison.OrdinalIgnoreCase))?.Id;
-    }
-
-    private async Task<ExerciseDto?> CreateExerciseAsync(string name)
-    {
-        var trimmedName = name.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedName))
-            return null;
-
-        var response = await Http.PostAsJsonAsync(
-            "api/exercises",
-            new CreateExerciseDto { Name = trimmedName });
-
-        if (!response.IsSuccessStatusCode)
-            return null;
-
-        return await response.Content.ReadFromJsonAsync<ExerciseDto>();
-    }
 }

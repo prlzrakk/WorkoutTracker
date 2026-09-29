@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WorkoutTracker.Client;
 using MudBlazor.Services;
+using WorkoutTracker.Client.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -13,6 +14,7 @@ var apiBaseAddress = clientBaseAddress.Scheme == Uri.UriSchemeHttps
     : new Uri("http://localhost:5149/");
 
 builder.Services.AddScoped(_ => new HttpClient { BaseAddress = apiBaseAddress });
+builder.Services.AddScoped<WorkoutDraftSaver>();
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

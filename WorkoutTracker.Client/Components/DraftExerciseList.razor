@@ -1,0 +1,47 @@
+@using WorkoutTracker.Client.Models
+@using WorkoutTracker.Core.DTOs.Exercise
+
+<div class="exercise-editor-list">
+    @foreach (var exercise in Exercises)
+    {
+        <div class="draft-exercise-item" @key="exercise">
+            <ExerciseCard
+                Exercise="exercise"
+                AvailableExercises="AvailableExercises" />
+
+            <button type="button"
+                    class="draft-exercise-delete"
+                    aria-label="Remove exercise"
+                    @onclick="() => RemoveExercise(exercise)">
+                <img src="/images/delete.svg" alt="">
+            </button>
+        </div>
+    }
+</div>
+
+<button class="add-exercise-button" type="button" @onclick="AddExercise">
+    <span>+</span> Add exercise
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<DraftExercise> Exercises { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyList<ExerciseDto> AvailableExercises { get; set; } = [];
+
+    [Parameter]
+    public EventCallback ExercisesChanged { get; set; }
+
+    private async Task AddExercise()
+    {
+        Exercises.Add(new DraftExercise());
+        await ExercisesChanged.InvokeAsync();
+    }
+
+    private async Task RemoveExercise(DraftExercise exercise)
+    {
+        Exercises.Remove(exercise);
+        await ExercisesChanged.InvokeAsync();
+    }
+}
