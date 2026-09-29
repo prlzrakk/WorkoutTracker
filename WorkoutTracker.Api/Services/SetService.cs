@@ -36,6 +36,15 @@ public class SetService(ProjectContext context) : ISetService
         return result;
     }
     
+    public async Task<List<SetDto>> GetSetsAsync(Guid workoutId, Guid workoutExerciseId)
+    {
+        return await context.Sets
+            .Where(s => s.WorkoutExerciseId == workoutExerciseId &&
+                        s.WorkoutExercise.WorkoutId == workoutId)
+            .OrderBy(s => s.SetNumber)
+            .Select(s => new SetDto(s.Id, s.Weight, s.Reps, s.SetNumber))
+            .ToListAsync();
+    }
 
     public async Task<SetDto?> GetSetByIdAsync(Guid workoutId, Guid workoutExerciseId, Guid id)
     {

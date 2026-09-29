@@ -1,0 +1,41 @@
+.stat-circle {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 65% 35%, #7fff3f, #3e8729 72%);
+    display: grid;
+    place-items: center;
+}
+
+.arc-label {
+    position: absolute;
+    top: -18px;
+    left: -18px;
+    width: calc(100% + 36px);
+    height: 96px;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.arc-label path {
+    fill: none;
+}
+
+.arc-label text {
+    fill: var(--green);
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.stat-circle strong {
+    position: relative;
+    z-index: 1;
+    font-size: 34px;
+    color: #88ff55;
+    line-height: 1;
+}
+
+.stat-circle strong.small {
+    font-size: 16px;
+}

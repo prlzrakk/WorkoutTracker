@@ -1,0 +1,100 @@
+.exercise-editor-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--panel);
+    padding: 24px 24px 22px 32px;
+    box-shadow: 0 0 18px rgba(110, 255, 63, 0.08), 0 8px 22px rgba(0, 0, 0, 0.25);
+}
+
+.exercise-editor-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 6px;
+    background: #3d941d;
+}
+
+.exercise-name-control {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.exercise-search {
+    min-width: 0;
+}
+
+.exercise-name-input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.exercise-name-input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+.exercise-suggestions {
+    display: grid;
+    margin-top: 12px;
+    overflow: hidden;
+    border: 1px solid #3cab22;
+    border-radius: 10px;
+    background: #24211f;
+}
+
+.exercise-suggestion {
+    min-height: 40px;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.exercise-suggestion:last-child {
+    border-bottom: 0;
+}
+
+.exercise-suggestion:hover {
+    background: var(--row);
+}
+
+.exercise-suggestion.create {
+    color: var(--green);
+    cursor: default;
+}
+
+.exercise-suggestion.message {
+    color: var(--muted);
+    cursor: default;
+}
+
+.exercise-chevron {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}

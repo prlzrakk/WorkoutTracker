@@ -1,0 +1,90 @@
+.create-workout-page {
+    width: min(100%, 430px);
+    margin: 0 auto;
+    padding: 18px 16px 64px;
+}
+
+.back-button {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 42px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+}
+
+.create-title {
+    margin: 24px 0 32px;
+    color: var(--text);
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.field-label {
+    display: block;
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.exercise-editor-list {
+    display: grid;
+    gap: 20px;
+}
+
+.add-exercise-button {
+    width: 100%;
+    min-height: 64px;
+    margin-top: 36px;
+    border: 2px dashed #3cab22;
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--green);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.add-exercise-button span {
+    font-size: 30px;
+    line-height: 1;
+}
+
+.save-workout-button {
+    width: 100%;
+    min-height: 54px;
+    margin-top: 22px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--green-dark);
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.save-workout-button:disabled {
+    cursor: default;
+    opacity: 0.65;
+}
+
+.form-error {
+    margin: 12px 0 0;
+    color: #ff6b6b;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+}

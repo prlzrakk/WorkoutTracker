@@ -1,0 +1,142 @@
+@page "/workouts"
+@using WorkoutTracker.Core.DTOs.Workout
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+
+<AppHeader/>
+
+<main class="workouts-page">
+    <button class="back-button" type="button" aria-label="Back to home" @onclick="GoHome">←</button>
+
+    <section class="panel workouts-panel">
+        <h1>Workouts</h1>
+
+        @if (isLoading)
+        {
+            <p class="workout-history-state">Loading workouts...</p>
+        }
+        else if (!string.IsNullOrWhiteSpace(error))
+        {
+            <p class="workout-history-state error">@error</p>
+        }
+        else
+        {
+            <div class="workout-history-list">
+                @foreach (var workout in VisibleWorkouts)
+                {
+                    <div class="workout-history-row">
+                        <button class="workout-history-main" type="button"
+                                @onclick="() => OpenWorkout(workout.workoutId)">
+                            @workout.Date.ToString("dd.MM.yy")
+                        </button>
+
+                        <button class="workout-menu-button" type="button"
+                                @onclick="() => ToggleMenu(workout.workoutId)">
+                            ⋮
+                        </button>
+
+                        @if (openedMenuWorkoutId == workout.workoutId)
+                        {
+                            <div class="workout-actions-menu">
+                                <button type="button" class="workout-action-button" aria-label="Edit workout" ,
+                                        @onclick="() => EditWorkout(workout.workoutId)">
+                                    <img class="action-icon" src="/images/edit.svg" alt="">
+                                </button>
+
+                                <button type="button" class="workout-action-button" aria-label="Delete workout",
+                                        @onclick="() => DeleteWorkout(workout.workoutId)">
+                                    <img class="action-icon" src="/images/delete.svg" alt="">
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        @if (visibleCount < workouts.Count)
+        {
+            <button class="see-more-button" type="button" @onclick="ShowMore">
+                See more
+            </button>
+        }
+    </section>
+</main>
+
+
+@code {
+    private List<WorkoutDto> workouts = [];
+    private int visibleCount = 4;
+    private bool isLoading;
+    private string? error;
+    private Guid? openedMenuWorkoutId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            workouts = await Http.GetFromJsonAsync<List<WorkoutDto>>("api/workouts") ?? [];
+
+            workouts = workouts
+                .OrderByDescending(w => w.Date)
+                .ToList();
+        }
+        catch (HttpRequestException)
+        {
+            error = "Could not load workouts";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private IEnumerable<WorkoutDto> VisibleWorkouts => workouts.Take(visibleCount);
+
+    private void ShowMore()
+    {
+        visibleCount += 4;
+    }
+
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private void OpenWorkout(Guid workoutId)
+    {
+        Navigation.NavigateTo($"/workouts/{workoutId}");
+    }
+
+    private void ToggleMenu(Guid workoutId)
+    {
+        openedMenuWorkoutId = openedMenuWorkoutId == workoutId
+            ? null
+            : workoutId;
+    }
+
+    private async Task DeleteWorkout(Guid workoutId)
+    {
+        var response = await Http.DeleteAsync($"api/workouts/{workoutId}");
+        if (!response.IsSuccessStatusCode)
+        {
+            error = "Workout was not deleted";
+            return;
+        }
+
+        workouts = workouts
+            .Where(workout => workout.workoutId != workoutId)
+            .ToList();
+        if (visibleCount > workouts.Count)
+            visibleCount = workouts.Count;
+    }
+
+    private void EditWorkout(Guid workoutId)
+    {
+        Navigation.NavigateTo($"/workouts/{workoutId}");
+    }
+
+}

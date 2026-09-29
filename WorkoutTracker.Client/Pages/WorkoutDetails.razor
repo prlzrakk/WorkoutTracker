@@ -1,0 +1,201 @@
+@page "/workouts/{WorkoutId:guid}"
+@using System.Globalization
+@using WorkoutTracker.Core.DTOs.Exercise
+@using WorkoutTracker.Core.DTOs.Set
+@using WorkoutTracker.Core.DTOs.Workout
+@using WorkoutTracker.Core.DTOs.WorkoutExercise
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Workout</PageTitle>
+
+<AppHeader />
+
+<main class="workout-details-page">
+    <button class="back-button" type="button" aria-label="Back to workouts" @onclick="GoBack">←</button>
+
+    @if (isLoading)
+    {
+        <p class="workout-details-state">Loading workout...</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <p class="workout-details-state error">@error</p>
+    }
+    else
+    {
+        <div class="workout-exercise-list">
+            @foreach (var exercise in workoutExercises)
+            {
+                <section class="workout-exercise-card" @key="exercise.WorkoutExerciseId">
+                    <div class="workout-exercise-head">
+                        <div class="workout-exercise-title">
+                            <h2>@exercise.Name</h2>
+                            <span>@FormatSetCount(exercise.Sets.Count)</span>
+                        </div>
+
+                        <button class="exercise-delete-button"
+                                type="button"
+                                aria-label="Delete exercise"
+                                @onclick="() => DeleteExercise(exercise.WorkoutExerciseId)">
+                            <img src="/images/delete.svg" alt="">
+                        </button>
+
+                        <button class="exercise-toggle-button" type="button" aria-label="Collapse exercise">
+                            ⌄
+                        </button>
+                    </div>
+
+                    <div class="readonly-sets-table">
+                        <div class="readonly-sets-head">
+                            <span>SET</span>
+                            <span>REPS</span>
+                            <span>WEIGHT</span>
+                        </div>
+
+                        @foreach (var set in exercise.Sets)
+                        {
+                            <div class="readonly-set-row">
+                                <span class="readonly-set-number">@set.SetNumber</span>
+                                <span>@set.Reps</span>
+                                <span class="readonly-set-weight">@FormatWeight(set.Weight)</span>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+
+        <button class="add-workout-exercise-button" type="button">
+            <span>+</span> Add exercise
+        </button>
+
+        <section class="workout-summary">
+            <h2>Workout Summary</h2>
+
+            <div class="summary-grid">
+                <div>
+                    <span>TOTAL VOLUME</span>
+                    <strong>@FormatVolume(TotalVolume)</strong>
+                </div>
+
+                <div>
+                    <span>TOTAL SETS</span>
+                    <strong>@TotalSets @FormatSetWord(TotalSets)</strong>
+                </div>
+            </div>
+        </section>
+    }
+</main>
+
+@code {
+    [Parameter] public Guid WorkoutId { get; set; }
+
+    private bool isLoading = true;
+    private string? error;
+    private List<WorkoutExerciseView> workoutExercises = [];
+
+    private int TotalSets => workoutExercises.Sum(exercise => exercise.Sets.Count);
+
+    private double TotalVolume => workoutExercises
+        .Sum(exercise => exercise.Sets.Sum(set => set.Weight * set.Reps));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadWorkoutAsync();
+    }
+
+    private async Task LoadWorkoutAsync()
+    {
+        isLoading = true;
+        error = null;
+
+        try
+        {
+            using var workoutResponse = await Http.GetAsync($"api/workouts/{WorkoutId}");
+            if (!workoutResponse.IsSuccessStatusCode)
+            {
+                error = "Workout was not found";
+                workoutExercises = [];
+                return;
+            }
+
+            var workoutExerciseDtos = await Http.GetFromJsonAsync<List<WorkoutExerciseDto>>(
+                $"api/workouts/{WorkoutId}/exercises") ?? [];
+
+            var exercises = await Http.GetFromJsonAsync<List<ExerciseDto>>("api/exercises") ?? [];
+            var exerciseNames = exercises.ToDictionary(exercise => exercise.Id, exercise => exercise.Name);
+
+            List<WorkoutExerciseView> loadedExercises = [];
+
+            foreach (var workoutExercise in workoutExerciseDtos)
+            {
+                var sets = await Http.GetFromJsonAsync<List<SetDto>>(
+                    $"api/workouts/{WorkoutId}/exercises/{workoutExercise.Id}/sets") ?? [];
+
+                loadedExercises.Add(new WorkoutExerciseView(
+                    workoutExercise.Id,
+                    exerciseNames.GetValueOrDefault(workoutExercise.ExerciseId, "Unknown exercise"),
+                    sets.OrderBy(set => set.SetNumber).ToList()));
+            }
+
+            workoutExercises = loadedExercises;
+        }
+        catch (HttpRequestException)
+        {
+            error = "Could not load workout";
+            workoutExercises = [];
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/workouts");
+    }
+
+    private async Task DeleteExercise(Guid workoutExerciseId)
+    {
+        var response = await Http.DeleteAsync($"api/workouts/{WorkoutId}/exercises/{workoutExerciseId}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            error = "Exercise was not deleted";
+            return;
+        }
+
+        workoutExercises = workoutExercises
+            .Where(exercise => exercise.WorkoutExerciseId != workoutExerciseId)
+            .ToList();
+    }
+
+    private static string FormatSetCount(int count)
+    {
+        return $"{count} {FormatSetWord(count)}";
+    }
+
+    private static string FormatSetWord(int count)
+    {
+        return count == 1 ? "set" : "sets";
+    }
+
+    private static string FormatWeight(double weight)
+    {
+        return $"{FormatNumber(weight)} kg";
+    }
+
+    private static string FormatVolume(double volume)
+    {
+        return $"{FormatNumber(volume)} kg";
+    }
+
+    private static string FormatNumber(double value)
+    {
+        return value.ToString(value % 1 == 0 ? "0" : "0.##", CultureInfo.InvariantCulture);
+    }
+
+    public sealed record WorkoutExerciseView(Guid WorkoutExerciseId, string Name, List<SetDto> Sets);
+}

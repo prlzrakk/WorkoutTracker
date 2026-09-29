@@ -1,0 +1,103 @@
+.sets-table {
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.sets-table-head,
+.set-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    column-gap: 12px;
+}
+
+.sets-table-head {
+    min-height: 34px;
+    padding: 0 24px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.sets-table-head span:nth-child(2) {
+    text-align: center;
+}
+
+.sets-table-head span:nth-child(3) {
+    text-align: right;
+}
+
+.set-row {
+    min-height: 50px;
+    padding: 0 24px;
+    background: #2d2d2d;
+}
+
+.set-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.set-input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.set-input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+.set-input.weight {
+    padding-right: 26px;
+    text-align: right;
+}
+
+.weight-input-wrap {
+    position: relative;
+    display: block;
+    color: var(--muted);
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.weight-input-wrap span {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.add-set-button {
+    min-height: 34px;
+    margin-top: 20px;
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.add-set-button span {
+    font-size: 30px;
+    line-height: 1;
+}

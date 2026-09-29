@@ -4,6 +4,7 @@
 @using WorkoutTracker.Core.DTOs.Workout
 @using WorkoutTracker.Core.DTOs.Exercise
 @using WorkoutTracker.Core.DTOs.WorkoutExercise
+@using WorkoutTracker.Core.DTOs.Set
 
 <PageTitle>Workout Tracker</PageTitle>
 
@@ -64,9 +65,9 @@
         <h2>Stats</h2>
 
         <div class="stats-grid">
-            <StatCircle Label="workouts" Value="4" />
-            <StatCircle Label="volume" Value="1800 kg" ValueClass="small" />
-            <StatCircle Label="streak" Value="1" />
+            <StatCircle Label="workouts" Value="@workoutsCount.ToString()" />
+            <StatCircle Label="volume" Value="@totalVolume.ToString(CultureInfo.InvariantCulture)" ValueClass="small" />
+            <StatCircle Label="streak" Value="@streak.ToString()" />
         </div>
     </section>
 
@@ -79,6 +80,11 @@
     private List<TodayExercise> todayExercises = [];
     private Guid? todayWorkoutId;
     private bool isLoadingTodayWorkout = true;
+    private List<WorkoutDetails.WorkoutExerciseView> workoutExercises = [];
+    private int workoutsCount;
+    private double totalVolume;
+    private int streak;
+    
 
     private string TodayLabel => DateTime.Today.ToString("ddd, d MMMM yyyy", CultureInfo.InvariantCulture);
 
@@ -89,6 +95,11 @@
         try
         {
             var workouts = await Http.GetFromJsonAsync<List<WorkoutDto>>("api/workouts") ?? [];
+            
+            workoutsCount = workouts.Count;
+            totalVolume = await CountTotalVolumeAsync(workouts);
+            streak = CountStreak(workouts);
+            
             WeekDays = BuildWeekDays(workouts);
 
             var todayWorkout = workouts.FirstOrDefault(workout => workout.Date == today);
@@ -142,6 +153,49 @@
                     workoutDates.Contains(date));
             })
             .ToList();
+    }
+    
+    private async Task<double> CountTotalVolumeAsync(List<WorkoutDto> workouts)
+    {
+        double volume = 0;
+
+        foreach (var workout in workouts)
+        {
+            var workoutExercises = await Http.GetFromJsonAsync<List<WorkoutExerciseDto>>(
+                $"api/workouts/{workout.workoutId}/exercises") ?? [];
+
+            foreach (var workoutExercise in workoutExercises)
+            {
+                var sets = await Http.GetFromJsonAsync<List<SetDto>>(
+                    $"api/workouts/{workout.workoutId}/exercises/{workoutExercise.Id}/sets") ?? [];
+
+                volume += sets.Sum(set => set.Weight * set.Reps);
+            }
+        }
+
+        return volume;
+    }
+    
+    private int CountStreak(List<WorkoutDto> workouts)
+    {
+        var workoutDates = workouts
+            .Select(workout => workout.Date)
+            .ToHashSet();
+
+        var date = today;
+
+        if (!workoutDates.Contains(date))
+            date = date.AddDays(-1);
+
+        var streak = 0;
+
+        while (workoutDates.Contains(date))
+        {
+            streak++;
+            date = date.AddDays(-1);
+        }
+
+        return streak;
     }
 
     private sealed record WeekDay(string Name, string Number, bool Active);

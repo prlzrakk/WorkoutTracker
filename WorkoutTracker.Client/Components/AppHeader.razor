@@ -1,7 +1,7 @@
 <header class="app-header">
-    <div class="logo-badge">
-        <img class="logo-icon" src="logo.svg" alt="Logo">
-    </div>
+    <a class="logo-badge" href="/" aria-label="Home">
+        <img class="logo-icon" src="/images/logo.svg" alt="">
+    </a>
 
     <button class="menu-button @(isMenuOpen ? "open" : "")"
             type="button"
@@ -23,9 +23,6 @@
         </NavLink>
         <NavLink class="side-menu-link" ActiveClass="active" href="workouts" @onclick="CloseMenu">
             Workouts
-        </NavLink>
-        <NavLink class="side-menu-link" ActiveClass="active" href="calendar" @onclick="CloseMenu">
-            Calendar
         </NavLink>
     </nav>
 

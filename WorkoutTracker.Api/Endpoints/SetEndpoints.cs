@@ -9,6 +9,12 @@ public static class SetEndpoints
 {
     public static RouteGroupBuilder MapSets(this RouteGroupBuilder group)
     {
+        group.MapGet("/", async (ISetService service, Guid workoutId, Guid workoutExerciseId) =>
+        {
+            var sets = await service.GetSetsAsync(workoutId, workoutExerciseId);
+            return Results.Ok(sets);
+        });
+
         group.MapGet("/{setId:guid}", async (ISetService service, Guid setId, Guid workoutId, Guid workoutExerciseId) =>
         {
             var set = await service.GetSetByIdAsync(workoutId, workoutExerciseId, setId);
