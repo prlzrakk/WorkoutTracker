@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
+using WorkoutTracker.Api.Extensions;
 using WorkoutTracker.Core.DTOs.Exercise;
 using WorkoutTracker.Services.Interfaces;
 
@@ -10,23 +12,23 @@ public static class ExerciseEndpoints
 {
     public static RouteGroupBuilder MapExerciseEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (IExerciseService service) =>
+        group.MapGet("/", async (ClaimsPrincipal user, IExerciseService service) =>
         {
-            var exercises = await service.GetExercisesAsync();
+            var exercises = await service.GetExercisesAsync(user.GetUserId());
             return Results.Ok(exercises);
         });
 
-        group.MapGet("/{id:guid}", async (IExerciseService service, Guid id) =>
+        group.MapGet("/{id:guid}", async (ClaimsPrincipal user, IExerciseService service, Guid id) =>
         {
-            var exercise = await service.GetExerciseByIdAsync(id);
+            var exercise = await service.GetExerciseByIdAsync(user.GetUserId(), id);
             return exercise is null ? Results.NotFound() : Results.Ok(exercise);
         });
 
-        group.MapPatch("/{id:guid}", async (IExerciseService service, Guid id, UpdateExerciseDto updatedExercise) =>
+        group.MapPatch("/{id:guid}", async (ClaimsPrincipal user, IExerciseService service, Guid id, UpdateExerciseDto updatedExercise) =>
         {
             try
             {
-                var updated = await service.UpdateExerciseAsync(id, updatedExercise);
+                var updated = await service.UpdateExerciseAsync(user.GetUserId(), id, updatedExercise);
                 return updated ? Results.NoContent() : Results.NotFound();
             }
             catch (InvalidOperationException ex)
@@ -39,11 +41,11 @@ public static class ExerciseEndpoints
             }
         });
 
-        group.MapDelete("/{id:guid}", async (IExerciseService service, Guid id) =>
+        group.MapDelete("/{id:guid}", async (ClaimsPrincipal user, IExerciseService service, Guid id) =>
         {
             try
             {
-                var deleted = await service.DeleteExerciseAsync(id);
+                var deleted = await service.DeleteExerciseAsync(user.GetUserId(), id);
                 return deleted ? Results.NoContent() : Results.NotFound();
             }
             catch (InvalidOperationException ex)
@@ -52,11 +54,11 @@ public static class ExerciseEndpoints
             }
         });
 
-        group.MapPost("/", async (IExerciseService service, CreateExerciseDto createdExerciseDto) =>
+        group.MapPost("/", async (ClaimsPrincipal user, IExerciseService service, CreateExerciseDto createdExerciseDto) =>
         {
             try
             {
-                var result = await service.CreateExerciseAsync(createdExerciseDto);
+                var result = await service.CreateExerciseAsync(user.GetUserId(), createdExerciseDto);
                 return Results.Created($"api/exercises/{result.Id}", result);
             }
             catch (ArgumentException ex)

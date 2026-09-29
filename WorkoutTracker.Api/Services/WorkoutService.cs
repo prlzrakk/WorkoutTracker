@@ -8,9 +8,10 @@ namespace WorkoutTracker.Services;
 
 public class WorkoutService(ProjectContext context) : IWorkoutService
 {
-    public async Task<List<WorkoutDto>> GetWorkoutsAsync()
+    public async Task<List<WorkoutDto>> GetWorkoutsAsync(string userId)
     {
         return await context.Workouts
+            .Where(w => w.UserId == userId)
             .Select(w => new WorkoutDto(
                 w.Id,
                 w.Date,
@@ -19,10 +20,10 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
             .ToListAsync();
     }
 
-    public async Task<WorkoutDto?> GetWorkoutByIdAsync(Guid workoutId)
+    public async Task<WorkoutDto?> GetWorkoutByIdAsync(string userId, Guid workoutId)
     {
         return await context.Workouts
-            .Where(w => w.Id == workoutId)
+            .Where(w => w.Id == workoutId && w.UserId == userId)
             .Select(w => new WorkoutDto(
                 w.Id,
                 w.Date,
@@ -31,11 +32,12 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<WorkoutDto> CreateWorkoutAsync(CreateWorkoutDto createWorkoutDto)
+    public async Task<WorkoutDto> CreateWorkoutAsync(string userId, CreateWorkoutDto createWorkoutDto)
     {
         var workout = new Workout
         {
-            Date = createWorkoutDto.Date
+            Date = createWorkoutDto.Date,
+            UserId = userId
         };
         await context.Workouts.AddAsync(workout);
         await context.SaveChangesAsync();
@@ -46,9 +48,10 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
         );
     }
 
-    public async Task<bool> UpdateWorkoutAsync(Guid workoutId, UpdateWorkoutDto updateWorkoutDto)
+    public async Task<bool> UpdateWorkoutAsync(string userId, Guid workoutId, UpdateWorkoutDto updateWorkoutDto)
     {
-        var workout = await context.Workouts.FindAsync(workoutId);
+        var workout = await context.Workouts
+            .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == userId);
         if (workout == null)
             return false;
         workout.Note = updateWorkoutDto.Note;
@@ -56,9 +59,10 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
         return true;
     }
 
-    public async Task<bool> DeleteWorkoutAsync(Guid workoutId)
+    public async Task<bool> DeleteWorkoutAsync(string userId, Guid workoutId)
     {
-        var workout = await context.Workouts.FindAsync(workoutId);
+        var workout = await context.Workouts
+            .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == userId);
         if (workout == null)
             return false;
         context.Workouts.Remove(workout);

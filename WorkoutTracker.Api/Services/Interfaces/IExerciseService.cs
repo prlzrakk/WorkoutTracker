@@ -5,9 +5,9 @@ namespace WorkoutTracker.Services.Interfaces;
 
 public interface IExerciseService
 {
-    Task<List<ExerciseDto>> GetExercisesAsync();
-    Task<ExerciseDto?> GetExerciseByIdAsync(Guid id);
-    Task<ExerciseDto> CreateExerciseAsync(CreateExerciseDto createExerciseDto);
-    Task<bool> UpdateExerciseAsync(Guid id, UpdateExerciseDto updateExerciseDto);
-    Task<bool> DeleteExerciseAsync(Guid id);
+    Task<List<ExerciseDto>> GetExercisesAsync(string userId);
+    Task<ExerciseDto?> GetExerciseByIdAsync(string userId, Guid id);
+    Task<ExerciseDto> CreateExerciseAsync(string userId, CreateExerciseDto createExerciseDto);
+    Task<bool> UpdateExerciseAsync(string userId, Guid id, UpdateExerciseDto updateExerciseDto);
+    Task<bool> DeleteExerciseAsync(string userId, Guid id);
 }

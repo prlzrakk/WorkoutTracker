@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace Infrastructure.Db;
 
-public class ProjectContext : DbContext
+public class ProjectContext : IdentityDbContext<IdentityUser>
 {
     public ProjectContext(DbContextOptions<ProjectContext> options)
         : base(options)
@@ -18,6 +20,7 @@ public class ProjectContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfiguration(new ExerciseConfiguration());
         modelBuilder.ApplyConfiguration(new WorkoutExerciseConfiguration());
         modelBuilder.ApplyConfiguration(new SetConfiguration());
@@ -32,6 +35,7 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Name).IsRequired();
         builder.HasMany(e => e.WorkoutExercises).WithOne(e => e.Exercise).HasForeignKey(e => e.ExerciseId);
+        builder.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
     }
 }
 
@@ -43,6 +47,7 @@ public class WorkoutConfiguration : IEntityTypeConfiguration<Workout>
         builder.Property(w => w.Date).IsRequired();
         builder.Property(w => w.Note);
         builder.HasMany(w => w.WorkoutExercises).WithOne(we => we.Workout).HasForeignKey(we => we.WorkoutId);
+        builder.HasOne(w => w.User).WithMany().HasForeignKey(w => w.UserId);
     }
 }
 

@@ -8,20 +8,22 @@ namespace WorkoutTracker.Services;
 
 public class WorkoutExerciseService(ProjectContext context) : IWorkoutExerciseService
 {
-    public async Task<List<WorkoutExerciseDto>> GetWorkoutExercisesAsync(Guid workoutId)
+    public async Task<List<WorkoutExerciseDto>> GetWorkoutExercisesAsync(string userId, Guid workoutId)
     {
         return await context.WorkoutExercises
-            .Where(w => w.WorkoutId == workoutId)
+            .Where(w => w.WorkoutId == workoutId && w.Workout.UserId == userId)
             .Select(we => new WorkoutExerciseDto(we.Id, we.ExerciseId, we.WorkoutId))
             .ToListAsync();
     }
 
-    public async Task<WorkoutExerciseDto?> CreateWorkoutExerciseAsync(Guid workoutId, CreateWorkoutExerciseDto dto)
+    public async Task<WorkoutExerciseDto?> CreateWorkoutExerciseAsync(string userId, Guid workoutId, CreateWorkoutExerciseDto dto)
     {
-        var workout = await context.Workouts.FindAsync(workoutId);
-        if (workout is null)
+        var workoutExists = await context.Workouts.AnyAsync(w => 
+            w.Id == workoutId && w.UserId == userId);
+        if (!workoutExists)
             return null;
-        var exercise = await context.Exercises.FindAsync(dto.ExerciseId);
+        var exercise = await context.Exercises
+            .FirstOrDefaultAsync(e => e.Id == dto.ExerciseId && e.UserId == userId);
         if (exercise is null)
             return null;
         var exists = await context.WorkoutExercises.AnyAsync(we =>
@@ -42,13 +44,14 @@ public class WorkoutExerciseService(ProjectContext context) : IWorkoutExerciseSe
         return result;
     }
 
-    public async Task<bool> UpdateWorkoutExerciseAsync(Guid workoutId, Guid workoutExerciseId, UpdateWorkoutExerciseDto dto)
+    public async Task<bool> UpdateWorkoutExerciseAsync(string userId, Guid workoutId, Guid workoutExerciseId, UpdateWorkoutExerciseDto dto)
     {
         var workoutExercise = await context.WorkoutExercises
-            .FirstOrDefaultAsync(we => we.Id == workoutExerciseId && we.WorkoutId == workoutId);
+            .FirstOrDefaultAsync(we => we.Id == workoutExerciseId && we.WorkoutId == workoutId && we.Workout.UserId == userId);
         if (workoutExercise is null)
             return false;
-        var exercise = await context.Exercises.FindAsync(dto.ExerciseId);
+        var exercise = await context.Exercises
+            .FirstOrDefaultAsync(e => e.Id == dto.ExerciseId && e.UserId == userId);
         if (exercise is null)
             return false;
         var exists = await context.WorkoutExercises.AnyAsync(we =>
@@ -62,11 +65,10 @@ public class WorkoutExerciseService(ProjectContext context) : IWorkoutExerciseSe
         return true;
     }
 
-    public async Task<bool> DeleteWorkoutExerciseAsync(Guid workoutId, Guid workoutExerciseId)
+    public async Task<bool> DeleteWorkoutExerciseAsync(string userId, Guid workoutId, Guid workoutExerciseId)
     {
         var workoutExercise = await context.WorkoutExercises
-            .Where(we => we.Id == workoutExerciseId && we.WorkoutId == workoutId)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(we => we.Id == workoutExerciseId && we.WorkoutId == workoutId && we.Workout.UserId == userId);
         if (workoutExercise is null)
             return false;
         context.WorkoutExercises.Remove(workoutExercise);
