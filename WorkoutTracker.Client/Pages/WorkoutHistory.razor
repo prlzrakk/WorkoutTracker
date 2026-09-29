@@ -2,7 +2,8 @@
 @using WorkoutTracker.Core.DTOs.Workout
 @inject HttpClient Http
 @inject NavigationManager Navigation
-
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 <AppHeader/>
 
@@ -103,7 +104,7 @@
 
     private void GoHome()
     {
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/home");
     }
 
     private void OpenWorkout(Guid workoutId)

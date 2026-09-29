@@ -1,0 +1,122 @@
+@page "/register"
+@using Microsoft.AspNetCore.Authorization
+@using WorkoutTracker.Client.Identity
+@attribute [AllowAnonymous]
+
+@inject CookieAuthenticationStateProvider Auth
+@inject NavigationManager Navigation
+
+<main class="register-page">
+    <section class="register-panel" aria-labelledby="register-title">
+        <div class="register-header">
+            <h1 id="register-title">Sign Up</h1>
+            <a class="login-link" href="/login">
+                <span>Log In</span>
+                <span class="login-chevron" aria-hidden="true">›</span>
+            </a>
+        </div>
+
+        <form class="register-form" @onsubmit="SubmitRegisterAsync" @onsubmit:preventDefault>
+            <div class="register-field">
+                <label for="register-name">Name</label>
+                <input id="register-name"
+                       class="register-input"
+                       @bind="name"
+                       type="text"
+                       autocomplete="name" />
+            </div>
+
+            <div class="register-field">
+                <label for="register-email">Email</label>
+                <input id="register-email"
+                       class="register-input"
+                       @bind="email"
+                       type="email"
+                       autocomplete="email" />
+            </div>
+
+            <div class="register-field">
+                <label for="register-password">Password</label>
+                <input id="register-password"
+                       class="register-input"
+                       @bind="password"
+                       type="password"
+                       autocomplete="new-password" />
+            </div>
+
+            <div class="register-field">
+                <label for="register-password-confirmation">Password Confirmation</label>
+                <input id="register-password-confirmation"
+                       class="register-input"
+                       @bind="passwordConfirmation"
+                       type="password"
+                       autocomplete="new-password" />
+            </div>
+
+            <button class="register-submit" type="submit" disabled="@isRegistering">
+                @(isRegistering ? "Signing up..." : "Sign Up")
+            </button>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <p class="register-error">@error</p>
+            }
+        </form>
+    </section>
+</main>
+
+@code {
+    private string name = string.Empty;
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string passwordConfirmation = string.Empty;
+    private string? error;
+    private bool isRegistering;
+
+    private async Task SubmitRegisterAsync()
+    {
+        if (isRegistering)
+            return;
+
+        error = null;
+
+        if (password != passwordConfirmation)
+        {
+            error = "Passwords do not match";
+            return;
+        }
+
+        isRegistering = true;
+
+        try
+        {
+            var registered = await Auth.RegisterAsync(
+                name.Trim(),
+                email.Trim(),
+                password,
+                passwordConfirmation);
+
+            if (!registered)
+            {
+                error = "Registration failed";
+                return;
+            }
+
+            var loggedIn = await Auth.LoginAsync(
+                email.Trim(),
+                password);
+
+            if (!loggedIn)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            Navigation.NavigateTo("/home");
+        }
+        finally
+        {
+            isRegistering = false;
+        }
+    }
+}

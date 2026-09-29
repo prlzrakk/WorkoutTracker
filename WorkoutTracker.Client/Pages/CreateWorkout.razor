@@ -5,6 +5,8 @@
 @inject NavigationManager Navigation
 @inject HttpClient Http
 @inject WorkoutDraftSaver WorkoutDraftSaver
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 <PageTitle>Create Workout</PageTitle>
 
@@ -51,7 +53,7 @@
 
     private void GoBack()
     {
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/home");
     }
 
     private async Task SaveWorkout()
@@ -95,7 +97,7 @@
                 return;
             }
 
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/home");
         }
         catch (HttpRequestException)
         {

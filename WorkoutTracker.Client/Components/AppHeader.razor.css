@@ -109,7 +109,7 @@
 .side-menu-cta {
     width: calc(100% - 64px);
     min-height: 38px;
-    margin: 66px auto 0;
+    margin: 20px auto 0;
     border-radius: 999px;
     background: var(--green-dark);
     color: var(--green);
@@ -118,4 +118,27 @@
     font-size: 16px;
     font-weight: 900;
     text-align: center;
+}
+
+.side-menu-logout {
+    width: calc(100% - 64px);
+    min-height: 38px;
+    margin: 8px auto 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.side-menu-logout-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
 }

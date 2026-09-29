@@ -1,8 +1,6 @@
 using System.Security.Claims;
-using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using WorkoutTracker.Core.DTOs.Register;
 
 namespace WorkoutTracker.Api.Endpoints;
@@ -12,7 +10,7 @@ public static class RegisterEndpoint
     public static WebApplication MapRegisterEndpoint(this WebApplication app)
     {
         app.MapPost("/api/register",
-            async (RegisterDto dto, ProjectContext context, UserManager<ApplicationUser> userManager) =>
+            async (RegisterDto dto, UserManager<ApplicationUser> userManager) =>
             {
                 if (dto.Password != dto.PasswordConfirmation)
                     return Results.BadRequest("Passwords do not match");
@@ -31,7 +29,13 @@ public static class RegisterEndpoint
         app.MapGet("/api/profile", async (ClaimsPrincipal user, UserManager<ApplicationUser> userManager) =>
         {
             var currentUser = await userManager.GetUserAsync(user);
-            return currentUser is null ? Results.Unauthorized() : Results.Ok(new {currentUser.Name});
+            return currentUser is null
+                ? Results.Unauthorized()
+                : Results.Ok(new
+                {
+                    currentUser.Name,
+                    Email = currentUser.Email ?? currentUser.UserName ?? string.Empty
+                });
         }).RequireAuthorization();
         
         app.MapPost("/logout", async (SignInManager<ApplicationUser> signInManager) => 

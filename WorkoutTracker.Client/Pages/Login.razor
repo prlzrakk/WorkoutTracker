@@ -1,0 +1,104 @@
+@page "/"
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@using WorkoutTracker.Client.Identity
+@attribute [AllowAnonymous]
+
+@inject CookieAuthenticationStateProvider Auth
+@inject NavigationManager Navigation
+
+<main class="login-page">
+    <section class="login-panel" aria-labelledby="login-title">
+        <div class="login-header">
+            <h1 id="login-title">Log in</h1>
+            <a class="signup-link" href="/register">
+                <span>Sign Up</span>
+                <span class="signup-chevron" aria-hidden="true">›</span>
+            </a>
+        </div>
+
+        <form class="login-form" @onsubmit="SubmitLoginAsync" @onsubmit:preventDefault>
+            <div class="login-field">
+                <label for="login-email">Email</label>
+                <input id="login-email"
+                       class="login-input"
+                       @bind="email"
+                       type="email"
+                       autocomplete="email" />
+            </div>
+
+            <div class="login-field">
+                <label for="login-password">Password</label>
+                <input id="login-password"
+                       class="login-input"
+                       @bind="password"
+                       type="password"
+                       autocomplete="current-password" />
+            </div>
+
+            <button class="login-submit" type="submit" disabled="@isLoggingIn">
+                @(isLoggingIn ? "Logging in..." : "Log In")
+            </button>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <p class="login-error">@error</p>
+            }
+        </form>
+    </section>
+</main>
+
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string? error;
+    private bool isLoggingIn;
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrl { get; set; }
+
+    private async Task SubmitLoginAsync()
+    {
+        if (isLoggingIn)
+            return;
+
+        error = null;
+        isLoggingIn = true;
+
+        try
+        {
+            var success = await Auth.LoginAsync(
+                email.Trim(),
+                password);
+
+            if (!success)
+            {
+                error = "Invalid email or password";
+                return;
+            }
+
+            NavigateAfterLogin();
+        }
+        finally
+        {
+            isLoggingIn = false;
+        }
+    }
+
+    private void NavigateAfterLogin()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl) ||
+            ReturnUrl == "/" ||
+            Uri.IsWellFormedUriString(ReturnUrl, UriKind.Absolute))
+        {
+            Navigation.NavigateTo("/home");
+            return;
+        }
+
+        var target = ReturnUrl.StartsWith('/')
+            ? ReturnUrl
+            : $"/{ReturnUrl}";
+
+        Navigation.NavigateTo(target);
+    }
+}

@@ -1,10 +1,12 @@
-﻿@page "/"
+﻿@page "/home"
 @using System.Globalization
 @inject HttpClient Http
 @using WorkoutTracker.Core.DTOs.Workout
 @using WorkoutTracker.Core.DTOs.Exercise
 @using WorkoutTracker.Core.DTOs.WorkoutExercise
 @using WorkoutTracker.Core.DTOs.Set
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 <PageTitle>Workout Tracker</PageTitle>
 
@@ -13,9 +15,13 @@
 <main class="home-page">
     <p class="date-label">@TodayLabel</p>
 
-    <h1 class="greeting">
-        Hello, <span>There!</span>
-    </h1>
+    <AuthorizeView Context="authState">
+        <Authorized>
+            <h1 class="greeting">
+                Hello, <span>@authState.User.Identity?.Name!</span>
+            </h1>
+        </Authorized>
+    </AuthorizeView>
 
     <section class="panel">
         <h2>Gym this week</h2>
