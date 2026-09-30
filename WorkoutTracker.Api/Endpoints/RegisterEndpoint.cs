@@ -23,29 +23,40 @@ public static class RegisterEndpoint
                     });
                 }
                 
-                var user = new ApplicationUser
+                try
                 {
-                    UserName = dto.Email,
-                    Email = dto.Email,
-                    Name = dto.Name
-                };
-                var result = await userManager.CreateAsync(user, dto.Password);
-                
-                if (!result.Succeeded)
-                {
-                    logger.LogWarning(
-                        "Registration failed. Email={Email}, Errors={Errors}",
-                        dto.Email,
-                        string.Join(", ", result.Errors.Select(error => error.Code)));
-
-                    return Results.BadRequest(new
+                    var user = new ApplicationUser
                     {
-                        errors = result.Errors.Select(error => error.Description)
-                    });
-                }
+                        UserName = dto.Email,
+                        Email = dto.Email,
+                        Name = dto.Name
+                    };
+                    var result = await userManager.CreateAsync(user, dto.Password);
 
-                logger.LogInformation("Account created. UserId={UserId}, Email={Email}", user.Id, user.Email);
-                return Results.Ok();
+                    if (!result.Succeeded)
+                    {
+                        logger.LogWarning(
+                            "Registration failed. Email={Email}, Errors={Errors}",
+                            dto.Email,
+                            string.Join(", ", result.Errors.Select(error => error.Code)));
+
+                        return Results.BadRequest(new
+                        {
+                            errors = result.Errors.Select(error => error.Description)
+                        });
+                    }
+
+                    logger.LogInformation("Account created. UserId={UserId}, Email={Email}", user.Id, user.Email);
+                    return Results.Ok();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Registration failed unexpectedly. Email={Email}", dto.Email);
+
+                    return Results.Problem(
+                        title: "Registration is temporarily unavailable. Please try again later.",
+                        statusCode: StatusCodes.Status500InternalServerError);
+                }
             }).AllowAnonymous();
 
         app.MapGet("/api/profile", async (ClaimsPrincipal user, UserManager<ApplicationUser> userManager) =>

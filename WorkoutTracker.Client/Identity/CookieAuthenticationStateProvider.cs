@@ -169,7 +169,20 @@ public class CookieAuthenticationStateProvider(HttpClient http) : Authentication
             // Fall back to the raw response text below.
         }
 
-        return content.Trim();
+        var trimmedContent = content.Trim();
+        if (LooksLikeTechnicalError(trimmedContent))
+            return fallbackMessage;
+
+        return trimmedContent;
+    }
+
+    private static bool LooksLikeTechnicalError(string content)
+    {
+        return content.Length > 300 ||
+               content.Contains("Exception", StringComparison.OrdinalIgnoreCase) ||
+               content.Contains(" at ", StringComparison.OrdinalIgnoreCase) ||
+               content.Contains("<html", StringComparison.OrdinalIgnoreCase) ||
+               content.Contains("<!DOCTYPE", StringComparison.OrdinalIgnoreCase);
     }
 
     private static List<string> ReadErrorMessages(JsonElement errors)
