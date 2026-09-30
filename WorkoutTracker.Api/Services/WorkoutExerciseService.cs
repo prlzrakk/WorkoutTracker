@@ -18,7 +18,7 @@ public class WorkoutExerciseService(ProjectContext context) : IWorkoutExerciseSe
 
     public async Task<WorkoutExerciseDto?> CreateWorkoutExerciseAsync(string userId, Guid workoutId, CreateWorkoutExerciseDto dto)
     {
-        var workoutExists = await context.Workouts.AnyAsync(w => 
+        var workoutExists = await context.Workouts.AnyAsync(w =>
             w.Id == workoutId && w.UserId == userId);
         if (!workoutExists)
             return null;

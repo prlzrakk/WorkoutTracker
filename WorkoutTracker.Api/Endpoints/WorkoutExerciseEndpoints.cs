@@ -38,7 +38,7 @@ public static class WorkoutExerciseEndpoints
                 }
                 catch (InvalidOperationException ex)
                 {
-                    return Results.Conflict(new {error = ex.Message});
+                    return Results.Conflict(new { error = ex.Message });
                 }
             });
 
@@ -52,7 +52,7 @@ public static class WorkoutExerciseEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.Conflict(new {error = ex.Message});
+                return Results.Conflict(new { error = ex.Message });
             }
         });
 

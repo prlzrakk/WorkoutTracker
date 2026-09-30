@@ -8,5 +8,5 @@ public interface ISetService
     public Task<List<SetDto>> GetSetsAsync(string userId, Guid workoutId, Guid workoutExerciseId);
     public Task<SetDto?> GetSetByIdAsync(string userId, Guid workoutId, Guid workoutExerciseId, Guid id);
     public Task<bool> DeleteSetAsync(string userId, Guid workoutId, Guid workoutExerciseId, Guid id);
-    public Task<bool> UpdateSetAsync(string userId, Guid id,  Guid workoutId, Guid workoutExerciseId, UpdateSetDto updateSetDto);
+    public Task<bool> UpdateSetAsync(string userId, Guid id, Guid workoutId, Guid workoutExerciseId, UpdateSetDto updateSetDto);
 }

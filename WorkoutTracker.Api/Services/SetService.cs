@@ -36,7 +36,7 @@ public class SetService(ProjectContext context) : ISetService
         var result = new SetDto(set.Id, set.Weight, set.Reps, set.SetNumber);
         return result;
     }
-    
+
     public async Task<List<SetDto>> GetSetsAsync(string userId, Guid workoutId, Guid workoutExerciseId)
     {
         return await context.Sets
@@ -51,14 +51,14 @@ public class SetService(ProjectContext context) : ISetService
     public async Task<SetDto?> GetSetByIdAsync(string userId, Guid workoutId, Guid workoutExerciseId, Guid id)
     {
         return await context.Sets
-            .Where(s => s.Id == id && 
-                        s.WorkoutExerciseId == workoutExerciseId && 
+            .Where(s => s.Id == id &&
+                        s.WorkoutExerciseId == workoutExerciseId &&
                         s.WorkoutExercise.WorkoutId == workoutId &&
                         s.WorkoutExercise.Workout.UserId == userId)
             .Select(s => new SetDto(s.Id, s.Weight, s.Reps, s.SetNumber))
             .FirstOrDefaultAsync();
     }
-    
+
     public async Task<bool> DeleteSetAsync(string userId, Guid workoutId, Guid workoutExerciseId, Guid id)
     {
         var set = await context.Sets
@@ -74,12 +74,12 @@ public class SetService(ProjectContext context) : ISetService
         return true;
     }
 
-    public async Task<bool> UpdateSetAsync(string userId, Guid id,  Guid workoutId, Guid workoutExerciseId, UpdateSetDto updateSetDto)
+    public async Task<bool> UpdateSetAsync(string userId, Guid id, Guid workoutId, Guid workoutExerciseId, UpdateSetDto updateSetDto)
     {
         var set = await context.Sets
-            .FirstOrDefaultAsync(s => 
-                s.Id == id && 
-                s.WorkoutExerciseId == workoutExerciseId && 
+            .FirstOrDefaultAsync(s =>
+                s.Id == id &&
+                s.WorkoutExerciseId == workoutExerciseId &&
                 s.WorkoutExercise.WorkoutId == workoutId &&
                 s.WorkoutExercise.Workout.UserId == userId);
         if (set == null)

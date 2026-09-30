@@ -25,7 +25,7 @@ public static class RegisterEndpoint
                     ? Results.Ok()
                     : Results.BadRequest(result.Errors);
             }).AllowAnonymous();
-        
+
         app.MapGet("/api/profile", async (ClaimsPrincipal user, UserManager<ApplicationUser> userManager) =>
         {
             var currentUser = await userManager.GetUserAsync(user);
@@ -37,8 +37,8 @@ public static class RegisterEndpoint
                     Email = currentUser.Email ?? currentUser.UserName ?? string.Empty
                 });
         }).RequireAuthorization();
-        
-        app.MapPost("/logout", async (SignInManager<ApplicationUser> signInManager) => 
+
+        app.MapPost("/logout", async (SignInManager<ApplicationUser> signInManager) =>
             {
                 await signInManager.SignOutAsync();
                 return Results.Ok();

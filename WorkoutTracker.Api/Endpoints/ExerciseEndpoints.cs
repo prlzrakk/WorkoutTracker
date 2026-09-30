@@ -33,11 +33,11 @@ public static class ExerciseEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.Conflict(new {error = ex.Message});
+                return Results.Conflict(new { error = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return Results.BadRequest(new {error = ex.Message});
+                return Results.BadRequest(new { error = ex.Message });
             }
         });
 
@@ -50,7 +50,7 @@ public static class ExerciseEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.Conflict(new {error = ex.Message});
+                return Results.Conflict(new { error = ex.Message });
             }
         });
 
@@ -63,11 +63,11 @@ public static class ExerciseEndpoints
             }
             catch (ArgumentException ex)
             {
-                return Results.BadRequest(new {error = ex.Message});
+                return Results.BadRequest(new { error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Results.Conflict(new {error = ex.Message});
+                return Results.Conflict(new { error = ex.Message });
             }
         });
 

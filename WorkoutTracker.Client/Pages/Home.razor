@@ -10,7 +10,7 @@
 
 <PageTitle>Workout Tracker</PageTitle>
 
-<AppHeader />
+<AppHeader/>
 
 <main class="home-page">
     <p class="date-label">@TodayLabel</p>
@@ -71,9 +71,9 @@
         <h2>Stats</h2>
 
         <div class="stats-grid">
-            <StatCircle Label="workouts" Value="@workoutsCount.ToString()" />
-            <StatCircle Label="volume" Value="@totalVolume.ToString(CultureInfo.InvariantCulture)" ValueClass="small" />
-            <StatCircle Label="streak" Value="@streak.ToString()" />
+            <StatCircle Label="workouts" Value="@workoutsCount.ToString()"/>
+            <StatCircle Label="volume" Value="@totalVolume.ToString(CultureInfo.InvariantCulture)" ValueClass="small"/>
+            <StatCircle Label="streak" Value="@streak.ToString()"/>
         </div>
     </section>
 
@@ -90,7 +90,7 @@
     private int workoutsCount;
     private double totalVolume;
     private int streak;
-    
+
 
     private string TodayLabel => DateTime.Today.ToString("ddd, d MMMM yyyy", CultureInfo.InvariantCulture);
 
@@ -101,11 +101,11 @@
         try
         {
             var workouts = await Http.GetFromJsonAsync<List<WorkoutDto>>("api/workouts") ?? [];
-            
+
             workoutsCount = workouts.Count;
             totalVolume = await CountTotalVolumeAsync(workouts);
             streak = CountStreak(workouts);
-            
+
             WeekDays = BuildWeekDays(workouts);
 
             var todayWorkout = workouts.FirstOrDefault(workout => workout.Date == today);
@@ -160,7 +160,7 @@
             })
             .ToList();
     }
-    
+
     private async Task<double> CountTotalVolumeAsync(List<WorkoutDto> workouts)
     {
         double volume = 0;
@@ -181,7 +181,7 @@
 
         return volume;
     }
-    
+
     private int CountStreak(List<WorkoutDto> workouts)
     {
         var workoutDates = workouts
@@ -205,5 +205,7 @@
     }
 
     private sealed record WeekDay(string Name, string Number, bool Active);
+
     private sealed record TodayExercise(Guid WorkoutExerciseId, string Name);
+
 }

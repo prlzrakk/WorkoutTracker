@@ -37,11 +37,11 @@ public static class SetEndpoints
                 }
                 catch (InvalidOperationException ex)
                 {
-                    return Results.Conflict(new {error = ex.Message});
+                    return Results.Conflict(new { error = ex.Message });
                 }
                 catch (ArgumentException ex)
                 {
-                    return Results.BadRequest(new {error = ex.Message});
+                    return Results.BadRequest(new { error = ex.Message });
                 }
             });
 
@@ -63,11 +63,11 @@ public static class SetEndpoints
                 }
                 catch (InvalidOperationException ex)
                 {
-                    return Results.Conflict(new {error = ex.Message});
+                    return Results.Conflict(new { error = ex.Message });
                 }
                 catch (ArgumentException ex)
                 {
-                    return Results.BadRequest(new {error = ex.Message});
+                    return Results.BadRequest(new { error = ex.Message });
                 }
             });
 
