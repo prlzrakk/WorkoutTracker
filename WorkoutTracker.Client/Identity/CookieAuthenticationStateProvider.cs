@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components.Authorization;
 using WorkoutTracker.Client.Models;
 
@@ -45,7 +46,7 @@ public class CookieAuthenticationStateProvider(HttpClient http) : Authentication
         }
     }
 
-    public async Task<bool> LoginAsync(string email, string password)
+    public async Task<AuthResult> LoginAsync(string email, string password)
     {
         try
         {
@@ -57,15 +58,21 @@ public class CookieAuthenticationStateProvider(HttpClient http) : Authentication
                 });
 
             if (!response.IsSuccessStatusCode)
-                return false;
+            {
+                var error = response.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                    ? "Invalid email or password"
+                    : await ReadErrorAsync(response, "Login failed");
+
+                return AuthResult.Fail(error);
+            }
         }
         catch
         {
-            return false;
+            return AuthResult.Fail("Could not connect to the server");
         }
 
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-        return true;
+        return AuthResult.Ok();
     }
 
     public async Task LogoutAsync()
@@ -82,7 +89,7 @@ public class CookieAuthenticationStateProvider(HttpClient http) : Authentication
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(Anonymous)));
     }
 
-    public async Task<bool> RegisterAsync(
+    public async Task<AuthResult> RegisterAsync(
         string name,
         string email,
         string password,
@@ -98,11 +105,108 @@ public class CookieAuthenticationStateProvider(HttpClient http) : Authentication
                     password,
                     passwordConfirmation
                 });
-            return response.IsSuccessStatusCode;
+
+            if (response.IsSuccessStatusCode)
+                return AuthResult.Ok();
+
+            var error = await ReadErrorAsync(response, "Registration failed");
+            return AuthResult.Fail(error);
         }
         catch
         {
-            return false;
+            return AuthResult.Fail("Could not connect to the server");
         }
+    }
+
+    private static async Task<string> ReadErrorAsync(HttpResponseMessage response, string fallbackMessage)
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(content))
+            return fallbackMessage;
+
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("errors", out var errors))
+            {
+                var errorMessages = ReadErrorMessages(errors);
+                if (errorMessages.Count > 0)
+                    return string.Join(" ", errorMessages);
+            }
+
+            if (root.TryGetProperty("error", out var error) &&
+                error.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(error.GetString()))
+            {
+                return error.GetString()!;
+            }
+
+            if (root.TryGetProperty("title", out var title) &&
+                title.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(title.GetString()))
+            {
+                return title.GetString()!;
+            }
+        }
+        catch (JsonException)
+        {
+            // Fall back to a JSON string or the raw response text below.
+        }
+
+        try
+        {
+            var errorText = JsonSerializer.Deserialize<string>(
+                content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (!string.IsNullOrWhiteSpace(errorText))
+                return errorText;
+        }
+        catch (JsonException)
+        {
+            // Fall back to the raw response text below.
+        }
+
+        return content.Trim();
+    }
+
+    private static List<string> ReadErrorMessages(JsonElement errors)
+    {
+        var messages = new List<string>();
+
+        if (errors.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in errors.EnumerateArray())
+            {
+                if (item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
+                    messages.Add(item.GetString()!);
+            }
+        }
+
+        if (errors.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in errors.EnumerateObject())
+            {
+                if (property.Value.ValueKind != JsonValueKind.Array)
+                    continue;
+
+                foreach (var item in property.Value.EnumerateArray())
+                {
+                    if (item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
+                        messages.Add(item.GetString()!);
+                }
+            }
+        }
+
+        return messages;
+    }
+
+    public sealed record AuthResult(bool Success, string? ErrorMessage)
+    {
+        public static AuthResult Ok() => new(true, null);
+
+        public static AuthResult Fail(string errorMessage) => new(false, errorMessage);
     }
 }

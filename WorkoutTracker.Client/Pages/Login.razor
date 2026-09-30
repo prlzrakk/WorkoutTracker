@@ -63,17 +63,30 @@
             return;
 
         error = null;
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            error = "Email is required";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            error = "Password is required";
+            return;
+        }
+
         isLoggingIn = true;
 
         try
         {
-            var success = await Auth.LoginAsync(
+            var loginResult = await Auth.LoginAsync(
                 email.Trim(),
                 password);
 
-            if (!success)
+            if (!loginResult.Success)
             {
-                error = "Invalid email or password";
+                error = loginResult.ErrorMessage;
                 return;
             }
 

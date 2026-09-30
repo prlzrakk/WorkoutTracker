@@ -17,7 +17,10 @@ public static class RegisterEndpoint
                 if (dto.Password != dto.PasswordConfirmation)
                 {
                     logger.LogWarning("Registration failed. Reason=PasswordMismatch, Email={Email}", dto.Email);
-                    return Results.BadRequest("Passwords do not match");
+                    return Results.BadRequest(new
+                    {
+                        errors = new[] { "Passwords do not match" }
+                    });
                 }
                 
                 var user = new ApplicationUser
@@ -35,7 +38,10 @@ public static class RegisterEndpoint
                         dto.Email,
                         string.Join(", ", result.Errors.Select(error => error.Code)));
 
-                    return Results.BadRequest(result.Errors);
+                    return Results.BadRequest(new
+                    {
+                        errors = result.Errors.Select(error => error.Description)
+                    });
                 }
 
                 logger.LogInformation("Account created. UserId={UserId}, Email={Email}", user.Id, user.Email);

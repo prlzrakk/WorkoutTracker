@@ -80,6 +80,24 @@
 
         error = null;
 
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            error = "Name is required";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            error = "Email is required";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            error = "Password is required";
+            return;
+        }
+
         if (password != passwordConfirmation)
         {
             error = "Passwords do not match";
@@ -90,23 +108,23 @@
 
         try
         {
-            var registered = await Auth.RegisterAsync(
+            var registerResult = await Auth.RegisterAsync(
                 name.Trim(),
                 email.Trim(),
                 password,
                 passwordConfirmation);
 
-            if (!registered)
+            if (!registerResult.Success)
             {
-                error = "Registration failed";
+                error = registerResult.ErrorMessage;
                 return;
             }
 
-            var loggedIn = await Auth.LoginAsync(
+            var loginResult = await Auth.LoginAsync(
                 email.Trim(),
                 password);
 
-            if (!loggedIn)
+            if (!loginResult.Success)
             {
                 Navigation.NavigateTo("/login");
                 return;
