@@ -28,11 +28,13 @@ public static class ClientExtensions
         if (string.IsNullOrWhiteSpace(apiBaseUrl))
             throw new InvalidOperationException("Api base url is not configured");
 
+        var apiBaseAddress = new Uri(clientBaseAddress, apiBaseUrl);
+
         builder.Services.AddTransient<CookieHandler>();
 
         builder.Services.AddHttpClient("Api", client =>
             {
-                client.BaseAddress = new Uri(apiBaseUrl);
+                client.BaseAddress = apiBaseAddress;
             })
             .AddHttpMessageHandler<CookieHandler>();
 

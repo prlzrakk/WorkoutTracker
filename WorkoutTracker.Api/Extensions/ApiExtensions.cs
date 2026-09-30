@@ -28,7 +28,7 @@ public static class ApiExtensions
         {
             throw new InvalidOperationException("Database environment variables are not configured");
         }
-        
+
         builder.Services.AddDbContext<ProjectContext>(options => { options.UseNpgsql(connectionString); });
 
         return builder;
@@ -47,7 +47,7 @@ public static class ApiExtensions
     {
         var clientUrl = builder.Configuration["CLIENT_URL"];
         var clientHttpsUrl = builder.Configuration["CLIENT_HTTPS_URL"];
-        
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("ClientApp", policy =>

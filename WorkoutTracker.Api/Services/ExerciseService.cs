@@ -6,7 +6,7 @@ using WorkoutTracker.Services.Interfaces;
 
 namespace WorkoutTracker.Services;
 
-public class ExerciseService(ProjectContext context) : IExerciseService
+public class ExerciseService(ProjectContext context, ILogger<ExerciseService> logger) : IExerciseService
 {
     public async Task<List<ExerciseDto>> GetExercisesAsync(string userId)
     {
@@ -31,12 +31,22 @@ public class ExerciseService(ProjectContext context) : IExerciseService
     public async Task<ExerciseDto> CreateExerciseAsync(string userId, CreateExerciseDto createExerciseDto)
     {
         if (string.IsNullOrWhiteSpace(createExerciseDto.Name))
+        {
+            logger.LogWarning("Exercise creation failed. UserId={UserId}, Reason=NameRequired", userId);
             throw new ArgumentException("Поле не может быть пустым");
+        }
 
         var name = createExerciseDto.Name.Trim();
         var exists = await context.Exercises.AnyAsync(e => e.Name.ToLower() == name.ToLower() && e.UserId == userId);
         if (exists)
+        {
+            logger.LogWarning(
+                "Exercise creation failed. UserId={UserId}, ExerciseName={ExerciseName}, Reason=AlreadyExists",
+                userId,
+                name);
+
             throw new InvalidOperationException("Такое упражнение уже существует");
+        }
 
         var exercise = new Exercise
         {
@@ -46,6 +56,12 @@ public class ExerciseService(ProjectContext context) : IExerciseService
 
         await context.Exercises.AddAsync(exercise);
         await context.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Exercise created. ExerciseId={ExerciseId}, UserId={UserId}, ExerciseName={ExerciseName}",
+            exercise.Id,
+            userId,
+            exercise.Name);
 
         var result = new ExerciseDto
         (
@@ -60,10 +76,18 @@ public class ExerciseService(ProjectContext context) : IExerciseService
         var exercise = await context.Exercises
             .FirstOrDefaultAsync(e => e.UserId == userId && e.Id == id);
         if (exercise == null)
+        {
+            logger.LogWarning("Exercise update failed. ExerciseId={ExerciseId}, UserId={UserId}, Reason=NotFound", id, userId);
             return false;
+        }
+
 
         if (string.IsNullOrWhiteSpace(updateExerciseDto.Name))
+        {
+            logger.LogWarning("Exercise update failed. ExerciseId={ExerciseId}, UserId={UserId}, Reason=NameRequired", id, userId);
             throw new ArgumentException("Поле не может быть пустым");
+        }
+
 
         var name = updateExerciseDto.Name.Trim();
 
@@ -73,11 +97,25 @@ public class ExerciseService(ProjectContext context) : IExerciseService
             e.UserId == userId);
 
         if (exists)
+        {
+            logger.LogWarning(
+                "Exercise update failed. ExerciseId={ExerciseId}, UserId={UserId}, ExerciseName={ExerciseName}, Reason=AlreadyExists",
+                id,
+                userId,
+                name);
+
             throw new InvalidOperationException("Такое упражнение уже существует");
+        }
 
         exercise.Name = name;
 
         await context.SaveChangesAsync();
+        logger.LogInformation(
+            "Exercise updated. ExerciseId={ExerciseId}, UserId={UserId}, ExerciseName={ExerciseName}",
+            exercise.Id,
+            userId,
+            exercise.Name);
+
         return true;
     }
 
@@ -85,15 +123,29 @@ public class ExerciseService(ProjectContext context) : IExerciseService
     {
         var exercise = await context.Exercises.FirstOrDefaultAsync(e => e.UserId == userId && e.Id == id);
         if (exercise == null)
+        {
+            logger.LogWarning("Exercise delete failed. ExerciseId={ExerciseId}, UserId={UserId}, Reason=NotFound", id, userId);
             return false;
+        }
 
         var isUsed = await context.WorkoutExercises
             .AnyAsync(we => we.ExerciseId == id);
         if (isUsed)
-            throw new InvalidOperationException("Нельзя удалить упражнение, так как оно сейчас используется в ваших тренировках.");
+        {
+            logger.LogWarning("Exercise delete failed. ExerciseId={ExerciseId}, UserId={UserId}, Reason=InUse", id, userId);
+            throw new InvalidOperationException(
+                "Нельзя удалить упражнение, так как оно сейчас используется в ваших тренировках.");
+        }
 
         context.Exercises.Remove(exercise);
         await context.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Exercise deleted. ExerciseId={ExerciseId}, UserId={UserId}, ExerciseName={ExerciseName}",
+            exercise.Id,
+            userId,
+            exercise.Name);
+
         return true;
     }
 }

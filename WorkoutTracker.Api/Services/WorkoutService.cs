@@ -6,7 +6,7 @@ using WorkoutTracker.Services.Interfaces;
 
 namespace WorkoutTracker.Services;
 
-public class WorkoutService(ProjectContext context) : IWorkoutService
+public class WorkoutService(ProjectContext context, ILogger<WorkoutService> logger) : IWorkoutService
 {
     public async Task<List<WorkoutDto>> GetWorkoutsAsync(string userId)
     {
@@ -41,6 +41,13 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
         };
         await context.Workouts.AddAsync(workout);
         await context.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Workout created. WorkoutId={WorkoutId}, UserId={UserId}, Date={Date}",
+            workout.Id,
+            workout.UserId,
+            workout.Date);
+
         return new WorkoutDto(
             workout.Id,
             workout.Date,
@@ -53,9 +60,15 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
         var workout = await context.Workouts
             .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == userId);
         if (workout == null)
+        {
+            logger.LogWarning("Workout update failed. WorkoutId={WorkoutId}, UserId={UserId}, Reason=NotFound", workoutId, userId);
             return false;
+        }
+
         workout.Note = updateWorkoutDto.Note;
         await context.SaveChangesAsync();
+
+        logger.LogInformation("Workout updated. WorkoutId={WorkoutId}, UserId={UserId}", workoutId, userId);
         return true;
     }
 
@@ -64,9 +77,15 @@ public class WorkoutService(ProjectContext context) : IWorkoutService
         var workout = await context.Workouts
             .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == userId);
         if (workout == null)
+        {
+            logger.LogWarning("Workout delete failed. WorkoutId={WorkoutId}, UserId={UserId}, Reason=NotFound", workoutId, userId);
             return false;
+        }
+
         context.Workouts.Remove(workout);
         await context.SaveChangesAsync();
+
+        logger.LogInformation("Workout deleted. WorkoutId={WorkoutId}, UserId={UserId}", workoutId, userId);
         return true;
     }
 }

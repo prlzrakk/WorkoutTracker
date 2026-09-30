@@ -10,10 +10,16 @@ public static class RegisterEndpoint
     public static WebApplication MapRegisterEndpoint(this WebApplication app)
     {
         app.MapPost("/api/register",
-            async (RegisterDto dto, UserManager<ApplicationUser> userManager) =>
+            async (RegisterDto dto, UserManager<ApplicationUser> userManager, ILoggerFactory loggerFactory) =>
             {
+                var logger = loggerFactory.CreateLogger("RegisterEndpoint");
+
                 if (dto.Password != dto.PasswordConfirmation)
+                {
+                    logger.LogWarning("Registration failed. Reason=PasswordMismatch, Email={Email}", dto.Email);
                     return Results.BadRequest("Passwords do not match");
+                }
+                
                 var user = new ApplicationUser
                 {
                     UserName = dto.Email,
@@ -21,9 +27,19 @@ public static class RegisterEndpoint
                     Name = dto.Name
                 };
                 var result = await userManager.CreateAsync(user, dto.Password);
-                return result.Succeeded
-                    ? Results.Ok()
-                    : Results.BadRequest(result.Errors);
+                
+                if (!result.Succeeded)
+                {
+                    logger.LogWarning(
+                        "Registration failed. Email={Email}, Errors={Errors}",
+                        dto.Email,
+                        string.Join(", ", result.Errors.Select(error => error.Code)));
+
+                    return Results.BadRequest(result.Errors);
+                }
+
+                logger.LogInformation("Account created. UserId={UserId}, Email={Email}", user.Id, user.Email);
+                return Results.Ok();
             }).AllowAnonymous();
 
         app.MapGet("/api/profile", async (ClaimsPrincipal user, UserManager<ApplicationUser> userManager) =>

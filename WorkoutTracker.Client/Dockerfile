@@ -1,0 +1,21 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY WorkoutTracker.Client/WorkoutTracker.Client.csproj WorkoutTracker.Client/
+COPY WorkoutTracker.Core/WorkoutTracker.Core.csproj WorkoutTracker.Core/
+
+RUN dotnet restore WorkoutTracker.Client/WorkoutTracker.Client.csproj
+
+COPY . .
+
+RUN dotnet publish WorkoutTracker.Client/WorkoutTracker.Client.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+FROM nginx:alpine
+
+COPY WorkoutTracker.Client/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+
+EXPOSE 80

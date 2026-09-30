@@ -1,6 +1,41 @@
 ﻿services:
-  workouttracker:
-    image: workouttracker
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: WorkoutTracker.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CLIENT_URL: ${CLIENT_URL}
+      CLIENT_HTTPS_URL: ${CLIENT_HTTPS_URL}
+      
+    depends_on:
+      - postgres
+
+  client:
+    build:
+      context: .
+      dockerfile: WorkoutTracker.Client/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

@@ -1,23 +1,25 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-ARG BUILD_CONFIGURATION=Release
+﻿FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["WorkoutTracker.csproj", "./"]
-RUN dotnet restore "WorkoutTracker.csproj"
+
+COPY WorkoutTracker.Api/WorkoutTracker.Api.csproj WorkoutTracker.Api/
+COPY WorkoutTracker.Core/WorkoutTracker.Core.csproj WorkoutTracker.Core/
+
+RUN dotnet restore WorkoutTracker.Api/WorkoutTracker.Api.csproj
+
 COPY . .
-WORKDIR "/src/"
-RUN dotnet build "WorkoutTracker.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "WorkoutTracker.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish WorkoutTracker.Api/WorkoutTracker.Api.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "WorkoutTracker.dll"]
+
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+
+ENV ASPNETCORE_URLS=http://+:8080
+
+ENTRYPOINT ["dotnet", "WorkoutTracker.Api.dll"]
