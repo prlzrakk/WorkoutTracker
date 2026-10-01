@@ -1,5 +1,4 @@
 @page "/register"
-@using Microsoft.AspNetCore.Authorization
 @using WorkoutTracker.Client.Identity
 @attribute [AllowAnonymous]
 
@@ -42,6 +41,9 @@
                        @bind="password"
                        type="password"
                        autocomplete="new-password" />
+                <p id="password-rules" class="password-hint">
+                    Password must contain uppercase, lowercase, number and special character.
+                </p>
             </div>
 
             <div class="register-field">
@@ -72,6 +74,7 @@
     private string passwordConfirmation = string.Empty;
     private string? error;
     private bool isRegistering;
+    private bool isEmailValid;
 
     private async Task SubmitRegisterAsync()
     {

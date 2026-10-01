@@ -106,6 +106,13 @@
     font-weight: 800;
 }
 
+.password-hint {
+    margin: 0;
+    color: #a8a8a8;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
 @media (max-width: 360px) {
     .register-page {
         padding-inline: 28px;
