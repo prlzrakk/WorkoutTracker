@@ -6,16 +6,17 @@
 .date-field {
     width: 100%;
     min-height: 52px;
+    box-sizing: border-box;
     border: 2px solid #4c4c4c;
     border-radius: 10px;
     background: var(--panel);
     color: var(--text);
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 28px minmax(0, 1fr) 24px;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 0;
-    padding: 0 22px;
+    padding: 0 16px;
     text-align: left;
     white-space: nowrap;
     font-size: 16px;
@@ -26,6 +27,7 @@
 .calendar-glyph {
     width: 22px;
     height: 22px;
+    justify-self: center;
     border: 3px solid var(--green);
     border-radius: 4px;
     position: relative;
@@ -50,10 +52,20 @@
     right: 4px;
 }
 
+.date-label {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .field-chevron {
+    width: 24px;
+    justify-self: end;
     color: var(--muted);
     font-size: 32px;
     line-height: 1;
+    text-align: center;
 }
 
 .calendar-popover {

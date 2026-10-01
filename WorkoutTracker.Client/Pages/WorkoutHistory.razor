@@ -109,7 +109,7 @@
 
     private void OpenWorkout(Guid workoutId)
     {
-        Navigation.NavigateTo($"/workouts/{workoutId}");
+        Navigation.NavigateTo($"/workouts/{workoutId}?returnUrl=/workouts");
     }
 
     private void ToggleMenu(Guid workoutId)
@@ -137,7 +137,7 @@
 
     private void EditWorkout(Guid workoutId)
     {
-        Navigation.NavigateTo($"/workouts/{workoutId}");
+        Navigation.NavigateTo($"/workouts/{workoutId}?returnUrl=/workouts");
     }
 
 }

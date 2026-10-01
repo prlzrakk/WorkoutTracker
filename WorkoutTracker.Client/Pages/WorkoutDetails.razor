@@ -8,7 +8,6 @@
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject WorkoutDraftSaver WorkoutDraftSaver
-@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 
 <PageTitle>Workout</PageTitle>
@@ -110,6 +109,10 @@
 
 @code {
     [Parameter] public Guid WorkoutId { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
     private List<DraftExercise> exercisesToAdd = [];
     private List<ExerciseDto> availableExercises = [];
     private bool isLoading = true;
@@ -177,7 +180,15 @@
 
     private void GoBack()
     {
-        Navigation.NavigateTo("/workouts");
+        Navigation.NavigateTo(GetReturnUrl());
+    }
+
+    private string GetReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl))
+            return "/workouts";
+
+        return ReturnUrl;
     }
 
     private void OnExercisesToAddChanged()

@@ -56,14 +56,14 @@
             <div class="workout-list">
                 @foreach (var exercise in todayExercises)
                 {
-                    <a class="workout-row" href="@($"/workouts/{todayWorkoutId}")">
+                    <a class="workout-row" href="@TodayWorkoutLink">
                         <span>@exercise.Name</span>
                         <span class="row-actions">-></span>
                     </a>
                 }
             </div>
 
-            <a class="add-button" href="@($"/workouts/{todayWorkoutId}")" aria-label="Add exercise">+</a>
+            <a class="add-button" href="@TodayWorkoutLink" aria-label="Add exercise">+</a>
         }
     </section>
 
@@ -93,6 +93,9 @@
 
 
     private string TodayLabel => DateTime.Today.ToString("ddd, d MMMM yyyy", CultureInfo.InvariantCulture);
+    private string TodayWorkoutLink => todayWorkoutId is null
+        ? "/home"
+        : $"/workouts/{todayWorkoutId}?returnUrl=/home";
 
     protected override async Task OnInitializedAsync()
     {
