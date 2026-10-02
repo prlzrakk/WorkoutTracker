@@ -77,6 +77,7 @@ public static class ApiExtensions
 
     public static WebApplicationBuilder AddApplicationServices(this WebApplicationBuilder builder)
     {
+        builder.Services.AddSingleton<HashEmailService>();
         builder.Services.AddOpenApi();
         builder.Services.AddScoped<IExerciseService, ExerciseService>();
         builder.Services.AddScoped<IWorkoutService, WorkoutService>();
