@@ -82,12 +82,16 @@ public static class ApiExtensions
         builder.Services.AddScoped<IWorkoutService, WorkoutService>();
         builder.Services.AddScoped<ISetService, SetService>();
         builder.Services.AddScoped<IWorkoutExerciseService, WorkoutExerciseService>();
+        builder.Services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>("db_check");
 
         return builder;
     }
 
     public static WebApplication MapEndpoints(this WebApplication app)
     {
+        app.MapGet("/health/live", () => Results.Ok("Healthy")); //api
+        app.MapHealthChecks("/health/ready"); //db
         app.MapRegisterEndpoint();
         app.MapGroup("api/exercises").RequireAuthorization().MapExerciseEndpoints();
         app.MapGroup("/api/workouts/{workoutId:guid}/exercises/{workoutExerciseId:guid}/sets").RequireAuthorization()

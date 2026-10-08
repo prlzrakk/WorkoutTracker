@@ -13,7 +13,7 @@ RUN dotnet publish WorkoutTracker.Client/WorkoutTracker.Client.csproj \
     -o /app/publish \
     --no-restore
 
-FROM nginx:alpine
+FROM nginx:1.27.3-alpine
 
 COPY WorkoutTracker.Client/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
