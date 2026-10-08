@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+WORKDIR /src
+
+COPY WorkoutTracker.Api/WorkoutTracker.Api.csproj WorkoutTracker.Api/
+COPY WorkoutTracker.Core/WorkoutTracker.Core.csproj WorkoutTracker.Core/
+
+RUN dotnet restore WorkoutTracker.Api/WorkoutTracker.Api.csproj
+
+COPY . .
+
+RUN dotnet tool install --global dotnet-ef --version 10.0.12
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
+WORKDIR /src/WorkoutTracker.Api
+
+RUN dotnet build WorkoutTracker.Api.csproj -c Release --no-restore
+
+ENTRYPOINT ["dotnet", "ef", "database", "update", "--no-build", "--configuration", "Release"]

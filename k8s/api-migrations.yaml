@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: api-migrations
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: api-migrations
+          image: workout-tracker-migrations:latest
+          imagePullPolicy: Never
+          envFrom:
+            - secretRef:
+                name: postgres-secret
