@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -58,6 +59,19 @@ public static class ApiExtensions
         });
         return builder;
     }
+
+    public static WebApplicationBuilder AddJsonLogging(this WebApplicationBuilder builder)
+    {
+        builder.Logging.ClearProviders();
+        builder.Logging.AddJsonConsole(options =>
+        {
+            options.IncludeScopes = true;
+            options.UseUtcTimestamp = true;
+            options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+        });
+        return builder;
+    }
+
 
     public static WebApplicationBuilder AddIdentityAuth(this WebApplicationBuilder builder)
     {

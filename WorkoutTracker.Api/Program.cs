@@ -3,6 +3,7 @@ using WorkoutTracker.Api.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder
+    .AddJsonLogging()
     .LoadEnvFiles()
     .AddClientCors()
     .AddProjectDatabase()
@@ -10,9 +11,9 @@ builder
     .AddIdentityAuth();
 
 var app = builder.Build();
-app.UseApiMiddleware();
-app.MapApiDocumentation();
 
-app.MapEndpoints();
-
-app.Run();
+app
+    .UseApiMiddleware()
+    .MapApiDocumentation()
+    .MapEndpoints()
+    .Run();

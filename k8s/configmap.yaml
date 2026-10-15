@@ -11,3 +11,4 @@ data:
   ASPNETCORE_URLS: "http://+:8080"
   CLIENT_URL: "http://localhost"
   CLIENT_HTTPS_URL: "https://localhost"
+  SERVICE_NAME: "workout-tracker-api"

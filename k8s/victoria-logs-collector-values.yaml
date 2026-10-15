@@ -1,0 +1,13 @@
+collector:
+  msgField:
+    - Message
+    - message
+    - msg
+    - log
+  timeField:
+    - Timestamp
+    - timestamp
+    - time
+  includePodLabels: true
+remoteWrite:
+  - url: http://vls-victoria-logs-single-server:9428
