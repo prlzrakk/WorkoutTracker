@@ -12,6 +12,10 @@ spec:
     metadata:
       labels:
         app: postgres
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9187"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: postgres
@@ -39,6 +43,32 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: postgres-vol
+        - name: sidecar-metrics
+          image: prometheuscommunity/postgres-exporter:v0.20.1
+          ports:
+          - name: metrics
+            containerPort: 9187
+          env:
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: config
+                  key: DB_NAME
+
+            - name: DATA_SOURCE_URI
+              value: "localhost:5432/$(DB_NAME)?sslmode=disable"
+
+            - name: DATA_SOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: DB_USER
+
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: DB_PASSWORD
   volumeClaimTemplates:
     - metadata:
         name: postgres-vol

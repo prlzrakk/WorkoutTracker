@@ -3,8 +3,11 @@ using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using Scalar.AspNetCore;
 using WorkoutTracker.Api.Endpoints;
+using WorkoutTracker.Api.Metrics;
 using WorkoutTracker.Endpoints;
 using WorkoutTracker.Services;
 using WorkoutTracker.Services.Interfaces;
@@ -96,10 +99,33 @@ public static class ApiExtensions
         builder.Services.AddScoped<IWorkoutService, WorkoutService>();
         builder.Services.AddScoped<ISetService, SetService>();
         builder.Services.AddScoped<IWorkoutExerciseService, WorkoutExerciseService>();
+        builder.Services.AddSingleton<BusinessMetrics>();
         builder.Services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("db_check");
 
         return builder;
+    }
+
+    public static WebApplicationBuilder AddOpenTelemetry(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddOpenTelemetry().WithMetrics(metrics =>
+        {
+            metrics
+                .SetResourceBuilder(
+                    OpenTelemetry.Resources.ResourceBuilder.CreateDefault().AddService("WorkoutTracker"))
+                .AddMeter("WorkoutTracker.Business")
+                .AddRuntimeInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddPrometheusExporter();
+        });
+        return builder;
+    }
+
+    public static WebApplication UseOpenTelemetryPrometheusEndpoint(this WebApplication app)
+    {
+        app.UseOpenTelemetryPrometheusScrapingEndpoint();
+        return app;
     }
 
     public static WebApplication MapEndpoints(this WebApplication app)

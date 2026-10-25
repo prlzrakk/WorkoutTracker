@@ -1,12 +1,13 @@
 using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
+using WorkoutTracker.Api.Metrics;
 using WorkoutTracker.Core.DTOs.WorkoutExercise;
 using WorkoutTracker.Services.Interfaces;
 
 namespace WorkoutTracker.Services;
 
-public class WorkoutExerciseService(ProjectContext context) : IWorkoutExerciseService
+public class WorkoutExerciseService(ProjectContext context, BusinessMetrics metrics) : IWorkoutExerciseService
 {
     public async Task<List<WorkoutExerciseDto>> GetWorkoutExercisesAsync(string userId, Guid workoutId)
     {
@@ -39,7 +40,12 @@ public class WorkoutExerciseService(ProjectContext context) : IWorkoutExerciseSe
         };
         await context.WorkoutExercises.AddAsync(workoutExercise);
         await context.SaveChangesAsync();
+        
+        var exerciseCount = await context.WorkoutExercises
+            .CountAsync(we => we.WorkoutId == workoutId);
 
+        metrics.TrackExercisesPerWorkout(exerciseCount);
+        
         var result = new WorkoutExerciseDto(workoutExercise.Id, dto.ExerciseId, workoutId);
         return result;
     }

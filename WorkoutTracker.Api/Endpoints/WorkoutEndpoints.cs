@@ -2,6 +2,7 @@ using WorkoutTracker.Core.DTOs.Workout;
 using WorkoutTracker.Services.Interfaces;
 using System.Security.Claims;
 using WorkoutTracker.Api.Extensions;
+using WorkoutTracker.Api.Metrics;
 
 namespace WorkoutTracker.Api.Endpoints;
 
@@ -34,9 +35,10 @@ public static class WorkoutEndpoints
                 return updated ? Results.NoContent() : Results.NotFound();
             });
 
-        group.MapPost("/", async (IWorkoutService service, ClaimsPrincipal user, CreateWorkoutDto createdWorkout) =>
+        group.MapPost("/", async (IWorkoutService service, ClaimsPrincipal user, CreateWorkoutDto createdWorkout, BusinessMetrics metrics) =>
         {
             var result = await service.CreateWorkoutAsync(user.GetUserId(), createdWorkout);
+            metrics.TrackCreatedWorkout();
             return Results.Created($"api/workouts/{result.workoutId}", result);
         });
 

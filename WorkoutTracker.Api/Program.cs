@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder
     .AddJsonLogging()
+    .AddOpenTelemetry()
     .LoadEnvFiles()
     .AddClientCors()
     .AddProjectDatabase()
@@ -16,4 +17,5 @@ app
     .UseApiMiddleware()
     .MapApiDocumentation()
     .MapEndpoints()
+    .UseOpenTelemetryPrometheusEndpoint()
     .Run();

@@ -1,12 +1,13 @@
 using Infrastructure.Db;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
+using WorkoutTracker.Api.Metrics;
 using WorkoutTracker.Core.DTOs.Set;
 using WorkoutTracker.Services.Interfaces;
 
 namespace WorkoutTracker.Services;
 
-public class SetService(ProjectContext context) : ISetService
+public class SetService(ProjectContext context, BusinessMetrics metrics) : ISetService
 {
     public async Task<SetDto?> CreateSetAsync(string userId, Guid workoutId, Guid workoutExerciseId, CreateSetDto createSetDto)
     {
@@ -33,6 +34,12 @@ public class SetService(ProjectContext context) : ISetService
         };
         await context.Sets.AddAsync(set);
         await context.SaveChangesAsync();
+        
+        var setCount = await context.Sets
+            .CountAsync(s => s.WorkoutExerciseId == workoutExerciseId);
+
+        metrics.TrackSetsPerExercise(setCount);
+        
         var result = new SetDto(set.Id, set.Weight, set.Reps, set.SetNumber);
         return result;
     }

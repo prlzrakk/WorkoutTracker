@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
+using WorkoutTracker.Api.Metrics;
 using WorkoutTracker.Core.DTOs.Register;
 
 namespace WorkoutTracker.Api.Endpoints;
@@ -10,7 +11,7 @@ public static class RegisterEndpoint
     public static WebApplication MapRegisterEndpoint(this WebApplication app)
     {
         app.MapPost("/api/register",
-            async (RegisterDto dto, UserManager<ApplicationUser> userManager, ILoggerFactory loggerFactory) =>
+            async (RegisterDto dto, UserManager<ApplicationUser> userManager, ILoggerFactory loggerFactory, BusinessMetrics metrics) =>
             {
                 var logger = loggerFactory.CreateLogger("RegisterEndpoint");
 
@@ -39,6 +40,7 @@ public static class RegisterEndpoint
                 }
 
                 logger.LogInformation("Account created. UserId={UserId}, Email={Email}", user.Id, user.Email);
+                metrics.TrackRegistrationSuccess();
                 return Results.Ok();
             }).AllowAnonymous();
 
